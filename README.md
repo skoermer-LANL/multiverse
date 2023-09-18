@@ -24,7 +24,7 @@ likelihood = multiverse.likelihoods.HomoskedasticGaussian(n, precision=nprec)
 For SVI and MCMC, see [TyXe](https://github.com/TyXe-BDL/TyXe/blob/master/README.md). For linLA, we can specify an approximation to the GGN approx. of the Hessian:
 * `full` computes the full GGN
 * `diag` computes a diagonal approx. of the GGN
-* `subnet` considers `S_perc`% of the parameters having the highest posterior variance, as detailed in [Daxberg et al. (2021)](http://proceedings.mlr.press/v139/daxberger21a.html), to build a full GGN, fixing the other parameters at the MAP
+* `subnet` considers `S_perc`% of the parameters having the highest posterior variance, as detailed in [Daxberger et al. (2021)](http://proceedings.mlr.press/v139/daxberger21a.html), to build a full GGN, fixing the other parameters at the MAP
 For example:
 ```
 bayesian_mlp = multiverse.LaplaceBNN(net, prior, likelihood, approximation='subnet', S_perc=0.5)
