@@ -8,5 +8,6 @@ authors:
   given-names: "Giosue"
 title: "multiverse"
 version: 0.1.0-beta
+doi: 10.5281/zenodo.8356033
 date-released: 2023-09-18
 url: "https://github.com/lanl/multiverse"
