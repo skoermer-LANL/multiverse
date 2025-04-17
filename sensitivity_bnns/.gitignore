@@ -1,0 +1,44 @@
+# --------------------------
+# Data files
+# --------------------------
+*.csv
+*.tsv
+*.xlsx
+*.json
+*.feather
+
+# --------------------------
+# Python artifacts
+# --------------------------
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# --------------------------
+# R artifacts
+# --------------------------
+*.RData
+*.Rhistory
+.Rproj.user/
+
+# --------------------------
+# System / Editor files
+# --------------------------
+.DS_Store
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# --------------------------
+# Optional: local logs or temp
+# --------------------------
+*.log
+*.out
+*.err
+*.tmp
+
+
