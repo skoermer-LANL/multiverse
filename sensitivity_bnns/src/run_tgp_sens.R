@@ -5,14 +5,16 @@ if (length(args) < 3) {
   stop("Usage: run_tgp_sens.R <method> <dgm> <response_col>")
 }
 
+secondOrder <- TRUE
+
+
 method <- args[1]
 dgm <- args[2]
 response_col <- args[3]
 
 suppressPackageStartupMessages({
   library(tgp)
-  library(dplyr)
-  library(readr)
+  library(sensitivity)
 })
 
 param_specs <- list(
@@ -59,7 +61,9 @@ set.seed(123)
 
 rect <- do.call("rbind",param_specs[[combo]]$ranges)
 
-sensfit <- sens(X = X, Z = Y, model = btgp, nn.lhs = 10, BTE = c(20, 100, 1),
+BTE <- c(2000, 100000, 10)
+
+sensfit <- sens(X = X, Z = Y, model = btgp, nn.lhs = 10, BTE = BTE,
                 rect = rect,
                 pred.n = FALSE,
                 improv = FALSE,
@@ -67,5 +71,65 @@ sensfit <- sens(X = X, Z = Y, model = btgp, nn.lhs = 10, BTE = c(20, 100, 1),
                 meanfn = "linear", trace = FALSE)
 
 
+## Additional calculation for 2nd order sens
 
+
+if(secondOrder){
+
+n <- 7000
+
+
+
+X1 <- X1nat <- data.frame(lhs(n, rect = rect))
+X2 <- X2nat <- data.frame(lhs(n, rect = rect))
+
+
+
+for(j in 1:ncol(X2nat)){
+
+  r <- rect[j,]
+  m <- r[1]
+  r <- r[2] - r[1]
+
+  X1[,j] <- (X1nat[,j] - m)/r
+  X2[,j] <- (X2nat[,j] - m)/r
+
+
+}
+
+sobol_design <- sobol(
+  model = NULL,
+  X1 = X1,
+  X2 = X2,
+  order = 2,
+  nboot = 0
+)
+
+XX <- unname(as.matrix(sobol_design$X))
+
+for(j in 1:ncol(XX)){
+
+  r <- rect[j,]
+  m <- r[1]
+  r <- r[2] - r[1]
+
+  XX[,j] <- XX[,j] * r + m
+
+}
+
+Y_allfit <- btgp(X = X, Z = Y, XX = XX, model = btgp, BTE = BTE,
+                pred.n = FALSE,
+                krige = TRUE,
+                meanfn = "linear", trace = FALSE)
+
+
+
+Y_all <- as.numeric(drop(Y_allfit$ZZ.mean))
+
+sobol_result <- tell(sobol_design, Y_all)
+
+save(sensfit, sobol_result, file = output_path)
+
+}else{
 save(sensfit, file = output_path)
+}
