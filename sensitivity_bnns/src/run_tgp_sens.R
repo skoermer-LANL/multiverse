@@ -16,6 +16,7 @@ response_col <- args[3]
 suppressPackageStartupMessages({
   library(tgp)
   library(sensitivity)
+  library(yaml)
 })
 
 param_specs <- list(
@@ -36,6 +37,20 @@ param_specs <- list(
     ranges = list(c(0, 1), c(-0.5, 0.5), c(2000, 20000), c(2, 100), c(1, 25), c(-3.3, -0.3), c(-2, 2))
   )
 )
+
+param_specs_raw <- yaml::read_yaml("param_specs_v1.yaml")
+
+# Convert to flat key format like before
+param_specs <- list()
+for (method in names(param_specs_raw)) {
+  for (dgm in names(param_specs_raw[[method]])) {
+    key <- paste(method, dgm, sep = "_")
+    param_specs[[key]] <- param_specs_raw[[method]][[dgm]]
+  }
+}
+
+
+
 
 combo <- paste(method, dgm, sep = "_")
 param_names <- param_specs[[combo]]$names

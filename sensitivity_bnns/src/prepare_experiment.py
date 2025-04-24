@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import qmc
 import argparse
+import yaml
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -77,6 +78,7 @@ def generate_and_save_poly_1d(save_dir, n_train=50, n_test=200, truesd=0.5, seed
 
 # ------------------ LHS GENERATION ------------------
 
+'''
 PARAM_SPECS = {
     ("kl_div", "x1d"): {
         "names": ["log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
@@ -99,6 +101,11 @@ PARAM_SPECS = {
         "ranges": [(0, 1), (-0.5, 0.5), (2000, 20000), (2, 100), (1, 25), (-3.3, -0.3), (-2, 2)]
     }
 }
+
+'''
+
+with open("param_specs_v1.yaml", "r") as f:
+    PARAM_SPECS = yaml.safe_load(f)
 
 def generate_lhs(param_ranges, param_names, n_samples, filename):
     sampler = qmc.LatinHypercube(d=len(param_ranges))

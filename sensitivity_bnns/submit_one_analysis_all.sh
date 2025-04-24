@@ -8,7 +8,7 @@ METHODS=("kl_div" "kl_div" "alpha_renyi" "alpha_renyi")
 DGMS=("x1d" "x2d" "x1d" "x2d")
 
 # Define partitions — modify as needed
-PARTITIONS=("shared-spr" "shared-spr" "shared-spr-hbm" "shared-spr-hbm")
+PARTITIONS=("shared-spr" "shared-spr" "shared-spr" "shared-spr")
 
 for i in "${!METHODS[@]}"; do
   METHOD=${METHODS[$i]}
