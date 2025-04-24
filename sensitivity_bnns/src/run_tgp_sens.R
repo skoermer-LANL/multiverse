@@ -6,6 +6,7 @@ if (length(args) < 3) {
 }
 
 secondOrder <- TRUE
+tgpsens <- FALSE
 
 
 method <- args[1]
@@ -63,6 +64,7 @@ rect <- do.call("rbind",param_specs[[combo]]$ranges)
 
 BTE <- c(2000, 100000, 10)
 
+if(tgpsens){
 sensfit <- sens(X = X, Z = Y, model = btgp, nn.lhs = 10, BTE = BTE,
                 rect = rect,
                 pred.n = FALSE,
@@ -70,7 +72,9 @@ sensfit <- sens(X = X, Z = Y, model = btgp, nn.lhs = 10, BTE = BTE,
                 krige = FALSE,
                 meanfn = "linear", trace = FALSE)
 
+save(sensfit, file = output_path)
 
+}
 ## Additional calculation for 2nd order sens
 
 
@@ -117,7 +121,7 @@ for(j in 1:ncol(XX)){
 
 }
 
-Y_allfit <- btgp(X = X, Z = Y, XX = XX, model = btgp, BTE = BTE,
+Y_allfit <- btgp(X = X, Z = Y, XX = XX, BTE = BTE,
                 pred.n = FALSE,
                 krige = TRUE,
                 meanfn = "linear", trace = FALSE)
@@ -126,10 +130,14 @@ Y_allfit <- btgp(X = X, Z = Y, XX = XX, model = btgp, BTE = BTE,
 
 Y_all <- as.numeric(drop(Y_allfit$ZZ.mean))
 
+Y_all <- (Y_all - mean(Y_all))/sd(Y_all)
+
 sobol_result <- tell(sobol_design, Y_all)
 
-save(sensfit, sobol_result, file = output_path)
+save(sobol_result, file = output_path)
 
-}else{
-save(sensfit, file = output_path)
+}
+
+if(secondOrder & tgpsens){
+  save(sensfit,sobol_result,  file = output_path)
 }
