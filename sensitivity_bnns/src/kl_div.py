@@ -84,6 +84,12 @@ def fit_variational_bnn_with_kl(
     - kl_history: History of KL divergence values over the optimization steps.
     - num_samples_history: History of the number of samples used at each step.
     """
+
+    # Set seeds
+    torch.manual_seed(42)
+    random.seed(42)
+    np.random.seed(42)
+
     input_dim = x.shape[1]  # Dynamically determine input dimension
 
     # Normalize known_var to be a safe tensor

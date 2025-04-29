@@ -75,6 +75,12 @@ def fit_variational_arenyi_bnn(
     - loss_history: History of the loss values over the optimization steps.
     - num_samples_history: History of the number of samples used at each step.
     """
+
+    # Set seeds
+    torch.manual_seed(42)
+    random.seed(42)
+    np.random.seed(42)
+
     input_dim = x.shape[1]  # Automatically set input dimension based on x
 
     known_var_tensor = torch.tensor(known_var, dtype=torch.float32, device=x.device)
@@ -118,7 +124,7 @@ def fit_variational_arenyi_bnn(
                 variational_sigma = torch.exp(variational_log_sigma)
                 normalization_term += torch.sum(torch.log(prior_sigma / variational_sigma))
 
-                # ✅ Biases (if present)
+                # Biases (if present)
                 if layer.bias_log_sigma is not None:
                     variational_bias_sigma = torch.exp(layer.bias_log_sigma)
                     normalization_term += torch.sum(torch.log(prior_sigma / variational_bias_sigma))
