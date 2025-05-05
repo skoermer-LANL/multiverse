@@ -11,19 +11,20 @@ library(tgp)
 reg_types <- c("kl_div", "alpha_renyi")
 data_gens <- c("x1d", "x2d")
 
-result_files <- c("tgp_interval_score_sens.RData", "tgp_rmse_sens.RData")
+result_files <- c("tgp_interval_score_sens.RData", "tgp_interval_score_sens_second.RData", "tgp_rmse_sens.RData")
 
 folders <- expand.grid(reg_types, data_gens)
 folders <- paste(folders$Var1,folders$Var2, sep = "_")
 
-results <- list(iscore = list(), rmse = list())
+results <- list(iscore = list(), second = list(), rmse = list())
 
 for(i in folders){
 
   load(paste0(i,"/", result_files[1]))
   results$iscore[[i]] <- sensfit
 
-  load(paste0(i,"/", result_files[2]))
+
+  load(paste0(i,"/", result_files[3]))
   results$rmse[[i]] <- sensfit
 
 }

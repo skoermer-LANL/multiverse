@@ -8,7 +8,8 @@ import torch.optim as optim
 import torchbnn as bnn
 import numpy as np
 
-# src/kl_div.py
+import random
+
 
 def run_regression(params, X, y, noise_var):
 

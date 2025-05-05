@@ -21,7 +21,7 @@ cd $SLURM_SUBMIT_DIR
 # === Detect available system resources ===
 TOTAL_CPUS=${SLURM_CPUS_ON_NODE:-$(nproc)}
 ESTIMATED_THREADS_PER_PROCESS=6
-TARGET_UTILIZATION=80  # in percent
+TARGET_UTILIZATION=70  # in percent
 
 # === Calculate number of concurrent processes ===
 NUM_PROCS_TO_USE=$(( (TOTAL_CPUS * TARGET_UTILIZATION / 100) / ESTIMATED_THREADS_PER_PROCESS ))

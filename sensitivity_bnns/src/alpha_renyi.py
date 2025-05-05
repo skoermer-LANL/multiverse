@@ -6,6 +6,9 @@ import torch.optim as optim
 
 import torchbnn as bnn
 
+import random
+import numpy as np
+
 
 
 def run_regression(params, X, y, noise_var):

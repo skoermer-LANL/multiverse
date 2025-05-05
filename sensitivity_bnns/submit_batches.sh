@@ -3,7 +3,7 @@
 METHOD=alpha_renyi
 DGM=x1d
 TOTAL=750
-BATCH_SIZE=30
+BATCH_SIZE=25
 
 for ((i=0; i<TOTAL; i+=BATCH_SIZE)); do
     START=$i

@@ -97,7 +97,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -125,23 +125,24 @@ toplt <- as.data.frame(apply(toplt, 2, as.character))
 
 maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
 
+
 for(i in 1:nrow(toplt)){
 
-  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+  regnow <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
 
-  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  cnames <- names(results[[toplt[i,]$response]][[regnow]]$X)
   wcol <- which(cnames %in% toplt[i,]$fctr)
 
-  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+  maineffplt[,i] <- results[[toplt[i,]$response]][[regnow]]$sens$ZZ.mean[,wcol]
 
   ## Shouldn't this be rescaled by the mean and sd of the original data??
   #maineffplt[,i] <- (maineffplt[,i] + 0.5)*(range(results[[toplt[i,]$response]][[reg]]$Z)[2] - range(results[[toplt[i,]$response]][[reg]]$Z)[1])
 
 
 
-  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[regnow]]$Z)) + mean(results[[toplt[i,]$response]][[regnow]]$Z)
 
-  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[regnow]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[regnow]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[regnow]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[regnow]]$sens$par$rect[1,wcol])
 
 }
 
@@ -300,7 +301,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -446,6 +447,1261 @@ plot.new()
 legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
 ```
 
+```{r kl3a, fig.height = 4.5, fig.width = 8.5}
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(1)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+if("alpha" %in% fctr){
+  reg <- "alpha_renyi"
+}
+
+if("log_kl_multiplier" %in% fctr){
+  reg <- "kl_div"
+}
+
+if(reg == "alpha_renyi"){
+  main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+}
+
+if(reg == "kl_div"){
+  main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+}
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms
+responses <- c("iscore", "rmse")
+response <- responses
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
+
+for(i in 1:nrow(toplt)){
+
+  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+
+  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  wcol <- which(cnames %in% toplt[i,]$fctr)
+
+  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+
+}
+
+layout(matrix(c(1,3,2,4,5,5,6,6), ncol = 4, byrow = TRUE), heights = c(6,1.75))
+
+## Add a shared title
+
+## First plot is RMSE
+resplot <- c("rmse", "iscore")[1]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+par(mar = c(4,4,3,1))
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# }
+## Second plot is interval score
+
+resplot <- c("rmse", "iscore")[2]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+par(mar = c(4,4,3,1))
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# 
+# }
+
+## Add a shared legend
+
+
+par(mar = c(0, 0, 1, 0.75))
+plot.new()
+
+legend("topright", legend = c("1-D X", "2-D X"), lty = 1:2, title = "Data Generating Mechanism", bty = "n")
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+fctr_labs <- fctr_labs[fctr_labs$sname %in% fctr,]
+par(mar = c(0, 0.75, 1, 0))
+plot.new()
+legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
+```
+
+```{r kl3b, fig.height = 4.5, fig.width = 8.5}
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(2)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+if("alpha" %in% fctr){
+  reg <- "alpha_renyi"
+}
+
+if("log_kl_multiplier" %in% fctr){
+  reg <- "kl_div"
+}
+
+if(reg == "alpha_renyi"){
+  main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+}
+
+if(reg == "kl_div"){
+  main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+}
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms
+responses <- c("iscore", "rmse")
+response <- responses
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
+
+for(i in 1:nrow(toplt)){
+
+  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+
+  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  wcol <- which(cnames %in% toplt[i,]$fctr)
+
+  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+
+}
+
+layout(matrix(c(1,3,2,4,5,5,6,6), ncol = 4, byrow = TRUE), heights = c(6,1.75))
+
+## Add a shared title
+
+## First plot is RMSE
+resplot <- c("rmse", "iscore")[1]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+par(mar = c(4,4,3,1))
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# }
+## Second plot is interval score
+
+resplot <- c("rmse", "iscore")[2]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+par(mar = c(4,4,3,1))
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# 
+# }
+
+## Add a shared legend
+
+
+par(mar = c(0, 0, 1, 0.75))
+plot.new()
+
+legend("topright", legend = c("1-D X", "2-D X"), lty = 1:2, title = "Data Generating Mechanism", bty = "n")
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+fctr_labs <- fctr_labs[fctr_labs$sname %in% fctr,]
+par(mar = c(0, 0.75, 1, 0))
+plot.new()
+legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
+```
+
+```{r kl3c, fig.height = 4.5, fig.width = 8.5}
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(3)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+if("alpha" %in% fctr){
+  reg <- "alpha_renyi"
+}
+
+if("log_kl_multiplier" %in% fctr){
+  reg <- "kl_div"
+}
+
+if(reg == "alpha_renyi"){
+  main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+}
+
+if(reg == "kl_div"){
+  main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+}
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms
+responses <- c("iscore", "rmse")
+response <- responses
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
+
+for(i in 1:nrow(toplt)){
+
+  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+
+  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  wcol <- which(cnames %in% toplt[i,]$fctr)
+
+  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+
+}
+
+layout(matrix(c(1,3,2,4,5,5,6,6), ncol = 4, byrow = TRUE), heights = c(6,1.75))
+
+## Add a shared title
+
+## First plot is RMSE
+resplot <- c("rmse", "iscore")[1]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+par(mar = c(4,4,3,1))
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# }
+## Second plot is interval score
+
+resplot <- c("rmse", "iscore")[2]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+par(mar = c(4,4,3,1))
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# 
+# }
+
+## Add a shared legend
+
+
+par(mar = c(0, 0, 1, 0.75))
+plot.new()
+
+legend("topright", legend = c("1-D X", "2-D X"), lty = 1:2, title = "Data Generating Mechanism", bty = "n")
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+fctr_labs <- fctr_labs[fctr_labs$sname %in% fctr,]
+par(mar = c(0, 0.75, 1, 0))
+plot.new()
+legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
+```
+
+
+```{r kl3e, fig.height = 4.5, fig.width = 8.5}
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(5)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+if("alpha" %in% fctr){
+  reg <- "alpha_renyi"
+}
+
+if("log_kl_multiplier" %in% fctr){
+  reg <- "kl_div"
+}
+
+if(reg == "alpha_renyi"){
+  main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+}
+
+if(reg == "kl_div"){
+  main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+}
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms
+responses <- c("iscore", "rmse")
+response <- responses
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
+
+for(i in 1:nrow(toplt)){
+
+  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+
+  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  wcol <- which(cnames %in% toplt[i,]$fctr)
+
+  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+
+}
+
+layout(matrix(c(1,3,2,4,5,5,6,6), ncol = 4, byrow = TRUE), heights = c(6,1.75))
+
+## Add a shared title
+
+## First plot is RMSE
+resplot <- c("rmse", "iscore")[1]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+par(mar = c(4,4,3,1))
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# }
+## Second plot is interval score
+
+resplot <- c("rmse", "iscore")[2]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+par(mar = c(4,4,3,1))
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# 
+# }
+
+## Add a shared legend
+
+
+par(mar = c(0, 0, 1, 0.75))
+plot.new()
+
+legend("topright", legend = c("1-D X", "2-D X"), lty = 1:2, title = "Data Generating Mechanism", bty = "n")
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+fctr_labs <- fctr_labs[fctr_labs$sname %in% fctr,]
+par(mar = c(0, 0.75, 1, 0))
+plot.new()
+legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
+```
+
+```{r kl3f, fig.height = 4.5, fig.width = 8.5}
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(6)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+if("alpha" %in% fctr){
+  reg <- "alpha_renyi"
+}
+
+if("log_kl_multiplier" %in% fctr){
+  reg <- "kl_div"
+}
+
+if(reg == "alpha_renyi"){
+  main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+}
+
+if(reg == "kl_div"){
+  main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+}
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms
+responses <- c("iscore", "rmse")
+response <- responses
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
+
+for(i in 1:nrow(toplt)){
+
+  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+
+  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  wcol <- which(cnames %in% toplt[i,]$fctr)
+
+  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+
+}
+
+layout(matrix(c(1,3,2,4,5,5,6,6), ncol = 4, byrow = TRUE), heights = c(6,1.75))
+
+## Add a shared title
+
+## First plot is RMSE
+resplot <- c("rmse", "iscore")[1]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+par(mar = c(4,4,3,1))
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# }
+## Second plot is interval score
+
+resplot <- c("rmse", "iscore")[2]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+par(mar = c(4,4,3,1))
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# 
+# }
+
+## Add a shared legend
+
+
+par(mar = c(0, 0, 1, 0.75))
+plot.new()
+
+legend("topright", legend = c("1-D X", "2-D X"), lty = 1:2, title = "Data Generating Mechanism", bty = "n")
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+fctr_labs <- fctr_labs[fctr_labs$sname %in% fctr,]
+par(mar = c(0, 0.75, 1, 0))
+plot.new()
+legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
+```
+
+```{r kl3g, fig.height = 4.5, fig.width = 8.5}
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(7)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+if("alpha" %in% fctr){
+  reg <- "alpha_renyi"
+}
+
+if("log_kl_multiplier" %in% fctr){
+  reg <- "kl_div"
+}
+
+if(reg == "alpha_renyi"){
+  main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+}
+
+if(reg == "kl_div"){
+  main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+}
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms
+responses <- c("iscore", "rmse")
+response <- responses
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+maineffplt <- maineffpltX <- data.frame(matrix(NA, ncol = nrow(toplt), nrow = 100))
+
+for(i in 1:nrow(toplt)){
+
+  reg <- paste(toplt[i,]$reg, toplt[i,]$dgm, sep = "_")
+
+  cnames <- names(results[[toplt[i,]$response]][[reg]]$X)
+  wcol <- which(cnames %in% toplt[i,]$fctr)
+
+  maineffplt[,i] <- results[[toplt[i,]$response]][[reg]]$sens$ZZ.mean[,wcol]
+
+  maineffplt[,i] <- (maineffplt[,i] * sd(results[[toplt[i,]$response]][[reg]]$Z)) + mean(results[[toplt[i,]$response]][[reg]]$Z)
+
+  maineffpltX[,i] <- (results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])/(results[[toplt[i,]$response]][[reg]]$sens$par$rect[2,wcol] - results[[toplt[i,]$response]][[reg]]$sens$par$rect[1,wcol])
+
+}
+
+layout(matrix(c(1,3,2,4,5,5,6,6), ncol = 4, byrow = TRUE), heights = c(6,1.75))
+
+## Add a shared title
+
+## First plot is RMSE
+resplot <- c("rmse", "iscore")[1]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+par(mar = c(4,4,3,1))
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[1])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# }
+## Second plot is interval score
+
+resplot <- c("rmse", "iscore")[2]
+
+## Specific data and ranges to add to this plot
+yplt <- maineffplt[,which(toplt$response %in% resplot), drop = FALSE]
+Xplt <- maineffpltX[, which(toplt$response %in% resplot), drop = FALSE]
+ylim <- range(yplt)
+xlim <- range(Xplt)
+
+## Which factors should we add to this plot
+pltting <- toplt[which(toplt$response %in% resplot),]
+
+# Where should we put the points
+pt_ind <- seq(from = 1, to = length(Xplt[,1]), length.out = 6)
+
+par(mar = c(4,4,3,1))
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[1] & plt_lookup$dgm == pltting$dgm[1] & plt_lookup$fctr == pltting$fctr[1])
+
+plot(Xplt[,1], yplt[,1], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,1], yplt[pt_ind,1], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
+
+plot(Xplt[,2], yplt[,2], type = "l", col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind], xlim = xlim, xlab = "Factor Rescaled to [0,1]", ylab = "Main Effect", main = main_labs[2])
+points(Xplt[pt_ind,2], yplt[pt_ind,2], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+
+# if(ncol(Xplt) > 1){
+# for(i in 2:ncol(yplt)){
+#   pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[i] & plt_lookup$dgm == pltting$dgm[i] & plt_lookup$fctr == pltting$fctr[i])
+# 
+#   lines(Xplt[,i], yplt[,i], col = plt_lookup$col[pltlookind],lty = plt_lookup$lty[pltlookind])
+#   points(Xplt[pt_ind,i], yplt[pt_ind,i], col = plt_lookup$col[pltlookind], pch = plt_lookup$pch[pltlookind] )
+# }
+# 
+# }
+
+## Add a shared legend
+
+
+par(mar = c(0, 0, 1, 0.75))
+plot.new()
+
+legend("topright", legend = c("1-D X", "2-D X"), lty = 1:2, title = "Data Generating Mechanism", bty = "n")
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+fctr_labs <- fctr_labs[fctr_labs$sname %in% fctr,]
+par(mar = c(0, 0.75, 1, 0))
+plot.new()
+legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 2, title = "Factors", bty = "n")
+```
+
 ```{r kl3, fig.height = 9, fig.width = 8.5}
 
 fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
@@ -505,7 +1761,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -716,7 +1972,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -919,7 +2175,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -1070,6 +2326,1251 @@ legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_la
 ```
 
 
+
+# First Order and Total
+
+## focus on KL
+
+```{r indicies_one_d_x_boxplot_justkl, fig.height = 6, fig.width = 9}
+
+ 
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(1,2,3,6,7,8)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")[1]
+
+# if("alpha" %in% fctr){
+#   reg <- "alpha_renyi"
+# }
+# 
+# if("log_kl_multiplier" %in% fctr){
+#   reg <- "kl_div"
+# }
+# 
+# if(reg == "alpha_renyi"){
+#   main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+# }
+# 
+# if(reg == "kl_div"){
+#   main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+# }
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms[1]
+responses <- c("iscore", "rmse")
+response <- responses
+
+if(dgm == "x1d"){
+  dgm_lab <- ", 1D X"
+}else if(dgm == "x2d"){
+  dgm_lab <- ", 2D X"
+}
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+#toplt <- toplt[-which(toplt$reg == "alpha_renyi" & toplt$fctr == "log_kl_multiplier"),]
+
+toplt <- toplt[-which(toplt$reg == "kl_div" & toplt$fctr == "alpha"),]
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+plot_combos <- paste(reg, dgm, sep = "_")
+#plot_combos <- c(plot_combos, plot_combos)
+
+# Function to dynamically get jitter bounds
+get_jitter_bounds <- function(data_matrix, jitter_amount = 0.2) {
+  num_vars <- ncol(data_matrix)
+  jittered_positions <- list()
+  bounds <- matrix(NA, ncol = num_vars, nrow = 2)  # Store min/max for each variable
+
+  for (i in 1:num_vars) {
+    jitter_vals <- jitter(rep(i, nrow(data_matrix)), amount = jitter_amount)
+    jittered_positions[[i]] <- jitter_vals
+    bounds[, i] <- range(jitter_vals)  # Min and Max x-position for jittered points
+  }
+
+  return(list(jittered_positions = jittered_positions, bounds = bounds))
+}
+
+main_labs <- c("Sensitivity of Interval Score", "Sensitivity of RMSE")
+
+mar_mat <- matrix(c(5,4,4,2,
+                    5,4,4,2), nrow= 2, ncol = 4, byrow = TRUE)
+
+layout(matrix(1:4, ncol = 2, nrow = 2, byrow = TRUE))
+
+for(j in 1:2){
+  
+  # j == 1 implies first order
+  # j == 2 implies total indices
+  
+  ind <- c("S", "T")[j]
+  
+  ## Select the correct combo of regression method and sensitivity index
+  # Constant dgm
+  for(k in 1:2){
+    
+    # k == 1 implies response[1] == interval score
+    # k == 2 implies response[2] == rmse
+    
+    mar_use <- mar_mat[k,]
+    
+  sens_dat <- results[[response[k]]][[plot_combos[1]]]$sens[[ind]]
+  
+  sens_stats <- data.frame(matrix(NA, ncol = length(fctrs)-1, nrow = 2))
+  names(sens_stats) <-  names(results[[response[k]]][[plot_combos[1]]]$X)
+  row.names(sens_stats) <- c("mean", "var")
+  
+  ##sens_dat[sens_dat < 0] <- 0
+
+  sens_stats[1,] <- apply(sens_dat,2,median)
+  sens_stats[2,] <- apply(sens_dat,2,var)
+  
+  sens_dat <- data.frame(sens_dat)
+  names(sens_dat) <- names(results[[response[k]]][[plot_combos[1]]]$X)
+  
+  
+  
+  
+  fctrs_plot <- toplt$fctr[toplt$reg == "kl_div" & toplt$response == response[k]]
+  
+  #data_jitter <- get_jitter_bounds(sens_dat[fctrs_plot])$bounds
+  
+  if(ind == "S"){
+    sens_lab <- ", First Order Sensitivity"
+    ylab <- "First Order Sensitivity"
+  }else if(ind == "T"){
+    sens_lab <- ", Total Sensitivity"
+    ylab <- "Total Sensitivity"
+  }
+  
+  #main_lab <- bquote("KL Divergence" * .(sens_lab))
+  main_lab <- main_labs[k]#paste("KL Divergence", dgm_lab, sep = "")
+  
+  
+  par(mar = mar_use)
+  
+  boxplot(x = sens_dat[fctrs_plot],
+          col = fctr_labs$col[fctr_labs$sname %in% fctrs_plot], 
+          xlab = "",
+          xaxt = "n",#fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)],
+          main = main_lab,
+          ylab = ylab, pars = list(boxwex = 0.6, staplewex = 0.4))
+  
+  # stripchart(sens_dat[fctrs_plot],
+  #          vertical = TRUE,
+  #          method = "jitter",
+  #          jitter = 0.2,
+  #          pch = 16, col = "gray85",
+  #          main = main_lab,#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+  #          ylab = "", xlab = "",
+  #          xaxt = "n", ylim = c(0, range(sens_dat[fctrs_plot])[2]))
+  # 
+  tickPositions <- 1:(length(fctrs_plot))
+  # First, draw the axis without labels.
+  axis(1, at = tickPositions, labels = FALSE)
+
+  for (i in seq_along(tickPositions)) {
+  # Set extra offset for tick labels 3 and 4
+  # extraLine <- if (i %in% c(3, 4)) 2 else 1
+  extraline <- 1
+  mtext(fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+  }
+  # 
+  # 
+  for(i in 1:length(fctrs_plot)){
+    mean_use <- sens_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+  #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+    #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black",#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]],
+     #     lwd = 2, lty = 1)
+  #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+    points(i, mean_use, pch = fctr_labs$pch[fctr_labs$sname == fctrs_plot[i]], cex = 1.5, lwd = 1.6, 
+           col ="white"#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]])
+           )
+  }
+  }
+  
+  
+  # ### Alpha renyi plot:
+  # sens_dat <- results[[response]][[plot_combos[2]]]$sens[[ind]]
+  # 
+  # sens_stats <- data.frame(matrix(NA, ncol = length(fctrs)-1, nrow = 2))
+  # names(sens_stats) <-  names(results[[response]][[plot_combos[2]]]$X)
+  # row.names(sens_stats) <- c("mean", "var")
+  # 
+  # sens_dat[sens_dat < 0] <- 0
+  # 
+  # sens_stats[1,] <- apply(sens_dat,2,median)
+  # sens_stats[2,] <- apply(sens_dat,2,var)
+  # 
+  # sens_dat <- data.frame(sens_dat)
+  # names(sens_dat) <- names(results[[response]][[plot_combos[2]]]$X)
+  # 
+  # 
+  # 
+  # 
+  # fctrs_plot <- toplt$fctr[toplt$reg == "alpha_renyi"]
+  # 
+  # #data_jitter <- get_jitter_bounds(sens_dat[fctrs_plot])$bounds
+  # 
+  # 
+  # #main_lab <- bquote("KL Divergence" * .(sens_lab))
+  # main_lab <- bquote(alpha * "-Renyi" * .(sens_lab))
+  # 
+  # 
+  # 
+  # 
+  # boxplot(x = sens_dat[fctrs_plot],
+  #         col = fctr_labs$col[fctr_labs$sname %in% fctrs_plot], 
+  #         xlab = "",
+  #         xaxt = "n",#fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)],
+  #         main = main_lab,
+  #         ylab = ylab)
+  # 
+  # # stripchart(sens_dat[fctrs_plot],
+  # #          vertical = TRUE,
+  # #          method = "jitter",
+  # #          jitter = 0.2,
+  # #          pch = 16, col = "gray85",
+  # #          main = main_lab,#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+  # #          ylab = "", xlab = "",
+  # #          xaxt = "n", ylim = c(0, range(sens_dat[fctrs_plot])[2]))
+  # # 
+  # tickPositions <- 1:(length(fctrs_plot))
+  # # First, draw the axis without labels.
+  # axis(1, at = tickPositions, labels = FALSE)
+  # 
+  # for (i in seq_along(tickPositions)) {
+  # # Set extra offset for tick labels 3 and 4
+  # # extraLine <- if (i %in% c(3, 4)) 2 else 1
+  # extraline <- 1
+  # mtext(fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+  # }
+  # # 
+  # # 
+  # for(i in 1:length(fctrs_plot)){
+  #   mean_use <- sens_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+  # #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+  #   #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black",#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]],
+  #    #     lwd = 2, lty = 1)
+  # #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+  #   points(i, mean_use, pch = fctr_labs$pch[fctr_labs$sname == fctrs_plot[i]], cex = 1.5, lwd = 1.6, 
+  #          col ="white"#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]])
+  #          )
+  #   }
+
+}
+# sens_i2 <- 1 ## Sensitivity index, index
+# sens_type <- c("S", "T")[sens_i2] ## equivalent to c("First order", "Total")
+# ylab1 <- c("First Order Sensitivity Index", "Total Sensitivity Index")[sens_i2]
+# 
+# 
+# mar_use <- c(4.5, 4.5, 1 , 1.5)
+# 
+# # 
+# # kl_fctrs_use <-  c("log_kl_multiplier",
+# #                    "log_sigma",
+# #                    "num_steps",
+# #                    "initial_samples",
+# #                    "log_lr"
+# # )
+# # 
+# # a_fctrs_use <- c("alpha",
+# #                  "log_sigma",
+# #                  "num_steps",
+# #                  "initial_samples",
+# #                  "log_lr")
+# # ufctrs <- unique(c(kl_fctrs_use, a_fctrs_use))
+# # 
+# # fctr_lookup <- data.frame(matrix(NA, nrow = length(ufctrs), ncol = 4))
+# # pchs <- c(16,4,5,17,8,16,4,5,17,8)
+# # 
+# # names(fctr_lookup) <- c("fctr", "col","pch","label")
+# # fctr_lookup$fctr <- ufctrs
+# # fctr_lookup$col <- hcl.colors(n = length(ufctrs))
+# # fctr_lookup$pch <- pchs[1:length(ufctrs)]
+# # fctr_lookup$label <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")), as.expression(bquote("log"[10] * "(" * sigma[0] * ")")), as.expression("Optimizer\n   Steps"), as.expression("Samples for\n Integration"), as.expression(bquote("log"[10] * "(LR)")), as.expression(bquote(alpha)))
+# # #fctr_lookup$label <- c("Loss Weight\nFactor","Prior\nVariance", "Optimizer\nSteps", "Samples for\n Integration", "Learning\nRate", "alpha")
+# # 
+# # 
+# # 
+# # metric <- c("interval_score_calculate", "interval_score_assess", "coverage_rate",
+# #             "rmse")[1]
+# # 
+# # if(reg_type == "kl_div"){
+# # fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+# #            "initial_samples", "log_lr", "prior_mu")
+# # }else if(reg_type == "alpha_renyi"){
+# #   fctrs <- c("alpha", "log_sigma", "num_steps", "num_weights", "initial_samples",
+# #                "log_lr", "prior_mu")
+# # }
+# # 
+# # fctr <- "log_sigma"
+# 
+# reg_dat <- paste0(reg_type, "_", data_gen)
+# 
+# first_order_stats <- data.frame(matrix(NA, ncol = length(fctrs), nrow = 2))
+# names(first_order_stats) <- fctrs
+# row.names(first_order_stats) <- c("mean", "var")
+# 
+# sens_fits <- results$sens[[reg_dat]]
+# 
+# first_order_stats[1,] <- apply(sens_fits$sens[[sens_type]],2,mean)
+# first_order_stats[2,] <- apply(sens_fits$sens[[sens_type]],2,var)
+# 
+# first_order <- sens_fits$sens[[sens_type]]
+# 
+# 
+# fctr_cols <- hcl.colors(n = length(fctrs), palette = "Zissou1")
+# 
+# if(reg_type == "kl_div"){
+#   fctrs_plot <- kl_fctrs_use
+# }else if(reg_type == "alpha_renyi"){
+#   fctrs_plot <- a_fctrs_use
+# }
+# 
+# fctrs_use <- fctrs_plot
+# 
+# first_order <- data.frame(first_order)
+# names(first_order) <- fctrs
+# 
+# #fctrs_plot <- fctrs
+# 
+# # Function to dynamically get jitter bounds
+# get_jitter_bounds <- function(data_matrix, jitter_amount = 0.2) {
+#   num_vars <- ncol(data_matrix)
+#   jittered_positions <- list()
+#   bounds <- matrix(NA, ncol = num_vars, nrow = 2)  # Store min/max for each variable
+# 
+#   for (i in 1:num_vars) {
+#     jitter_vals <- jitter(rep(i, nrow(data_matrix)), amount = jitter_amount)
+#     jittered_positions[[i]] <- jitter_vals
+#     bounds[, i] <- range(jitter_vals)  # Min and Max x-position for jittered points
+#   }
+# 
+#   return(list(jittered_positions = jittered_positions, bounds = bounds))
+# }
+# 
+# data_jitter <- get_jitter_bounds(first_order[fctrs_plot])$bounds
+# 
+# 
+# par(mar = mar_use)
+# 
+# #custom_labels <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")), as.expression(bquote("log"[10] * "(" * sigma * ")")), "Optimizer\nSteps", "Layer\nWeights", "Monte-Carlo\nSamples", bquote("log"[10] * "(LR)"), bquote(mu["0"]))[fctrs %in% fctrs_plot]#c("A", "B", "C", "D", "E", "F", "G")
+# 
+# stripchart(first_order[fctrs_plot],
+#            vertical = TRUE,
+#            method = "jitter",
+#            jitter = 0.2,
+#            pch = 16, col = "gray85",
+#            main = "",#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+#            ylab = ylab1, xlab = "",
+#            xaxt = "n", ylim = c(0, range(first_order[fctrs_plot])[2]))#c(0,0.4))#,
+# #ylim = ylim)
+# 
+# #axis(1, at = 1:ncol(first_order_KL[fctrs_plot]), labels = custom_labels)  # las=2 rotates labels
+# #axis(1, at = 1:ncol(first_order_KL[fctrs_plot]), labels = fctr_lookup$label[match(kl_fctrs_use, fctr_lookup$fctr)])  # las=2 rotates labels
+# tickPositions <- 1:6
+# # First, draw the axis without labels.
+# axis(1, at = tickPositions, labels = FALSE)
+# 
+# # Now, add the labels manually with mtext.
+# # We loop over the tick positions, and for positions 3 and 4 we use a larger 'line' value.
+# 
+# 
+# for (i in seq_along(tickPositions)) {
+#   # Set extra offset for tick labels 3 and 4
+#   # extraLine <- if (i %in% c(3, 4)) 2 else 1
+#   extraline <- 1
+#   mtext(fctr_lookup$label[match(fctrs_use, fctr_lookup$fctr)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+# }
+# 
+# 
+# for(i in 1:length(fctrs_plot)){
+#   mean_use <- first_order_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+#   #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+#   lines(data_jitter[,i],rep(mean_use, times = 2), col = fctr_lookup$col[fctr_lookup$fctr == fctrs_plot[i]], lwd = 2, lty = 1)
+#   #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+#   points(mean(data_jitter[,i]), mean_use, pch = fctr_lookup$pch[fctr_lookup$fctr == fctrs_plot[i]], cex = 1.5, lwd = 1.6, col =fctr_lookup$col[fctr_lookup$fctr == fctrs_plot[i]])
+# }
+
+
+```
+
+## overall focus
+
+```{r indicies_one_d_x, fig.height = 6, fig.width = 9}
+
+ #16401629 
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(1,2,3,6,7,8)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")
+
+# if("alpha" %in% fctr){
+#   reg <- "alpha_renyi"
+# }
+# 
+# if("log_kl_multiplier" %in% fctr){
+#   reg <- "kl_div"
+# }
+# 
+# if(reg == "alpha_renyi"){
+#   main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+# }
+# 
+# if(reg == "kl_div"){
+#   main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+# }
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms[1]
+responses <- c("iscore", "rmse")
+response <- responses[1]
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+toplt <- toplt[-which(toplt$reg == "alpha_renyi" & toplt$fctr == "log_kl_multiplier"),]
+
+toplt <- toplt[-which(toplt$reg == "kl_div" & toplt$fctr == "alpha"),]
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+plot_combos <- paste(reg, dgm, sep = "_")
+
+
+# Function to dynamically get jitter bounds
+get_jitter_bounds <- function(data_matrix, jitter_amount = 0.2) {
+  num_vars <- ncol(data_matrix)
+  jittered_positions <- list()
+  bounds <- matrix(NA, ncol = num_vars, nrow = 2)  # Store min/max for each variable
+
+  for (i in 1:num_vars) {
+    jitter_vals <- jitter(rep(i, nrow(data_matrix)), amount = jitter_amount)
+    jittered_positions[[i]] <- jitter_vals
+    bounds[, i] <- range(jitter_vals)  # Min and Max x-position for jittered points
+  }
+
+  return(list(jittered_positions = jittered_positions, bounds = bounds))
+}
+
+
+layout(matrix(1:4, ncol = 2, nrow = 2, byrow = TRUE))
+
+for(j in 1:2){
+  
+  ind <- c("S", "T")[j]
+  
+  ## Select the correct combo of regression method and sensitivity index
+  # Constant dgm
+  
+  sens_dat <- results[[response]][[plot_combos[1]]]$sens[[ind]]
+  
+  sens_stats <- data.frame(matrix(NA, ncol = length(fctrs)-1, nrow = 2))
+  names(sens_stats) <-  names(results[[response]][[plot_combos[1]]]$X)
+  row.names(sens_stats) <- c("mean", "var")
+
+  sens_stats[1,] <- apply(sens_dat,2,median)
+  sens_stats[2,] <- apply(sens_dat,2,var)
+  
+  sens_dat <- data.frame(sens_dat)
+  names(sens_dat) <- names(results[[response]][[plot_combos[1]]]$X)
+  
+  fctrs_plot <- toplt$fctr[toplt$reg == "kl_div"]
+  
+  data_jitter <- get_jitter_bounds(sens_dat[fctrs_plot])$bounds
+  
+  if(ind == "S"){
+    sens_lab <- ", First Order Sensitivity"
+  }else if(ind == "T"){
+    sens_lab <- ", Total Sensitivity"
+  }
+  
+  main_lab <- bquote("KL Divergence" * .(sens_lab))
+  
+  stripchart(sens_dat[fctrs_plot],
+           vertical = TRUE,
+           method = "jitter",
+           jitter = 0.2,
+           pch = 16, col = "gray85",
+           main = main_lab,#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+           ylab = "", xlab = "",
+           xaxt = "n", ylim = c(0, range(sens_dat[fctrs_plot])[2]))
+  
+  tickPositions <- 1:(length(fctrs_plot))
+  # First, draw the axis without labels.
+  axis(1, at = tickPositions, labels = FALSE)
+  
+  for (i in seq_along(tickPositions)) {
+  # Set extra offset for tick labels 3 and 4
+  # extraLine <- if (i %in% c(3, 4)) 2 else 1
+  extraline <- 1
+  mtext(fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+  }
+
+
+  for(i in 1:length(fctrs_plot)){
+    mean_use <- sens_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+  #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+    lines(data_jitter[,i],rep(mean_use, times = 2), col = "black",#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]], 
+          lwd = 2, lty = 1)
+  #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+    points(mean(data_jitter[,i]), mean_use, pch = fctr_labs$pch[fctr_labs$sname %in% fctrs_plot[i]], cex = 1.5, lwd = 1.6, col =fctr_labs$col[fctr_labs$sname %in% fctrs_plot[i]])
+    }
+
+  
+  ### Alpha renyi plot:
+  sens_dat <- results[[response]][[plot_combos[2]]]$sens[[ind]]
+  
+  sens_stats <- data.frame(matrix(NA, ncol = length(fctrs)-1, nrow = 2))
+  names(sens_stats) <-  names(results[[response]][[plot_combos[2]]]$X)
+  row.names(sens_stats) <- c("mean", "var")
+
+  sens_stats[1,] <- apply(sens_dat,2,median)
+  sens_stats[2,] <- apply(sens_dat,2,var)
+  
+  sens_dat <- data.frame(sens_dat)
+  names(sens_dat) <- names(results[[response]][[plot_combos[2]]]$X)
+  
+  fctrs_plot <- toplt$fctr[toplt$reg == "alpha_renyi"]
+  
+  data_jitter <- get_jitter_bounds(sens_dat[fctrs_plot])$bounds
+  
+  main_lab <- bquote(alpha * "-Renyi" * .(sens_lab))
+  
+  stripchart(sens_dat[fctrs_plot],
+           vertical = TRUE,
+           method = "jitter",
+           jitter = 0.2,
+           pch = 16, col = "gray85",
+           main = main_lab,#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+           ylab = "", xlab = "",
+           xaxt = "n", ylim = c(0, range(sens_dat[fctrs_plot])[2]))
+  
+  tickPositions <- 1:(length(fctrs_plot))
+  # First, draw the axis without labels.
+  axis(1, at = tickPositions, labels = FALSE)
+  
+  for (i in seq_along(tickPositions)) {
+  # Set extra offset for tick labels 3 and 4
+  # extraLine <- if (i %in% c(3, 4)) 2 else 1
+  extraline <- 1
+  mtext(fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+  }
+
+
+  for(i in 1:length(fctrs_plot)){
+    mean_use <- sens_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+  #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+    lines(data_jitter[,i],rep(mean_use, times = 2), col = "black",#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]], 
+          lwd = 2, lty = 1)
+  #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+    points(mean(data_jitter[,i]), mean_use, pch = fctr_labs$pch[fctr_labs$sname %in% fctrs_plot[i]], cex = 1.5, lwd = 1.6, col =fctr_labs$col[fctr_labs$sname %in% fctrs_plot[i]])
+    }
+  
+}
+
+# sens_i2 <- 1 ## Sensitivity index, index
+# sens_type <- c("S", "T")[sens_i2] ## equivalent to c("First order", "Total")
+# ylab1 <- c("First Order Sensitivity Index", "Total Sensitivity Index")[sens_i2]
+# 
+# 
+# mar_use <- c(4.5, 4.5, 1 , 1.5)
+# 
+# # 
+# # kl_fctrs_use <-  c("log_kl_multiplier",
+# #                    "log_sigma",
+# #                    "num_steps",
+# #                    "initial_samples",
+# #                    "log_lr"
+# # )
+# # 
+# # a_fctrs_use <- c("alpha",
+# #                  "log_sigma",
+# #                  "num_steps",
+# #                  "initial_samples",
+# #                  "log_lr")
+# # ufctrs <- unique(c(kl_fctrs_use, a_fctrs_use))
+# # 
+# # fctr_lookup <- data.frame(matrix(NA, nrow = length(ufctrs), ncol = 4))
+# # pchs <- c(16,4,5,17,8,16,4,5,17,8)
+# # 
+# # names(fctr_lookup) <- c("fctr", "col","pch","label")
+# # fctr_lookup$fctr <- ufctrs
+# # fctr_lookup$col <- hcl.colors(n = length(ufctrs))
+# # fctr_lookup$pch <- pchs[1:length(ufctrs)]
+# # fctr_lookup$label <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")), as.expression(bquote("log"[10] * "(" * sigma[0] * ")")), as.expression("Optimizer\n   Steps"), as.expression("Samples for\n Integration"), as.expression(bquote("log"[10] * "(LR)")), as.expression(bquote(alpha)))
+# # #fctr_lookup$label <- c("Loss Weight\nFactor","Prior\nVariance", "Optimizer\nSteps", "Samples for\n Integration", "Learning\nRate", "alpha")
+# # 
+# # 
+# # 
+# # metric <- c("interval_score_calculate", "interval_score_assess", "coverage_rate",
+# #             "rmse")[1]
+# # 
+# # if(reg_type == "kl_div"){
+# # fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+# #            "initial_samples", "log_lr", "prior_mu")
+# # }else if(reg_type == "alpha_renyi"){
+# #   fctrs <- c("alpha", "log_sigma", "num_steps", "num_weights", "initial_samples",
+# #                "log_lr", "prior_mu")
+# # }
+# # 
+# # fctr <- "log_sigma"
+# 
+# reg_dat <- paste0(reg_type, "_", data_gen)
+# 
+# first_order_stats <- data.frame(matrix(NA, ncol = length(fctrs), nrow = 2))
+# names(first_order_stats) <- fctrs
+# row.names(first_order_stats) <- c("mean", "var")
+# 
+# sens_fits <- results$sens[[reg_dat]]
+# 
+# first_order_stats[1,] <- apply(sens_fits$sens[[sens_type]],2,mean)
+# first_order_stats[2,] <- apply(sens_fits$sens[[sens_type]],2,var)
+# 
+# first_order <- sens_fits$sens[[sens_type]]
+# 
+# 
+# fctr_cols <- hcl.colors(n = length(fctrs), palette = "Zissou1")
+# 
+# if(reg_type == "kl_div"){
+#   fctrs_plot <- kl_fctrs_use
+# }else if(reg_type == "alpha_renyi"){
+#   fctrs_plot <- a_fctrs_use
+# }
+# 
+# fctrs_use <- fctrs_plot
+# 
+# first_order <- data.frame(first_order)
+# names(first_order) <- fctrs
+# 
+# #fctrs_plot <- fctrs
+# 
+# # Function to dynamically get jitter bounds
+# get_jitter_bounds <- function(data_matrix, jitter_amount = 0.2) {
+#   num_vars <- ncol(data_matrix)
+#   jittered_positions <- list()
+#   bounds <- matrix(NA, ncol = num_vars, nrow = 2)  # Store min/max for each variable
+# 
+#   for (i in 1:num_vars) {
+#     jitter_vals <- jitter(rep(i, nrow(data_matrix)), amount = jitter_amount)
+#     jittered_positions[[i]] <- jitter_vals
+#     bounds[, i] <- range(jitter_vals)  # Min and Max x-position for jittered points
+#   }
+# 
+#   return(list(jittered_positions = jittered_positions, bounds = bounds))
+# }
+# 
+# data_jitter <- get_jitter_bounds(first_order[fctrs_plot])$bounds
+# 
+# 
+# par(mar = mar_use)
+# 
+# #custom_labels <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")), as.expression(bquote("log"[10] * "(" * sigma * ")")), "Optimizer\nSteps", "Layer\nWeights", "Monte-Carlo\nSamples", bquote("log"[10] * "(LR)"), bquote(mu["0"]))[fctrs %in% fctrs_plot]#c("A", "B", "C", "D", "E", "F", "G")
+# 
+# stripchart(first_order[fctrs_plot],
+#            vertical = TRUE,
+#            method = "jitter",
+#            jitter = 0.2,
+#            pch = 16, col = "gray85",
+#            main = "",#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+#            ylab = ylab1, xlab = "",
+#            xaxt = "n", ylim = c(0, range(first_order[fctrs_plot])[2]))#c(0,0.4))#,
+# #ylim = ylim)
+# 
+# #axis(1, at = 1:ncol(first_order_KL[fctrs_plot]), labels = custom_labels)  # las=2 rotates labels
+# #axis(1, at = 1:ncol(first_order_KL[fctrs_plot]), labels = fctr_lookup$label[match(kl_fctrs_use, fctr_lookup$fctr)])  # las=2 rotates labels
+# tickPositions <- 1:6
+# # First, draw the axis without labels.
+# axis(1, at = tickPositions, labels = FALSE)
+# 
+# # Now, add the labels manually with mtext.
+# # We loop over the tick positions, and for positions 3 and 4 we use a larger 'line' value.
+# 
+# 
+# for (i in seq_along(tickPositions)) {
+#   # Set extra offset for tick labels 3 and 4
+#   # extraLine <- if (i %in% c(3, 4)) 2 else 1
+#   extraline <- 1
+#   mtext(fctr_lookup$label[match(fctrs_use, fctr_lookup$fctr)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+# }
+# 
+# 
+# for(i in 1:length(fctrs_plot)){
+#   mean_use <- first_order_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+#   #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+#   lines(data_jitter[,i],rep(mean_use, times = 2), col = fctr_lookup$col[fctr_lookup$fctr == fctrs_plot[i]], lwd = 2, lty = 1)
+#   #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+#   points(mean(data_jitter[,i]), mean_use, pch = fctr_lookup$pch[fctr_lookup$fctr == fctrs_plot[i]], cex = 1.5, lwd = 1.6, col =fctr_lookup$col[fctr_lookup$fctr == fctrs_plot[i]])
+# }
+
+
+```
+
+```{r indicies_one_d_x_boxplot, fig.height = 6, fig.width = 9}
+
+ #16401629 
+
+fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+  "initial_samples", "log_lr", "prior_mu", "alpha")[c(1,2,3,6,7,8)]#[c(2,3,4,6,8)]#[c(1,2,4,6)]#[c(2,3,4,6,8)]#[c(2,4,6)]
+
+reg <- c("kl_div", "alpha_renyi")
+
+# if("alpha" %in% fctr){
+#   reg <- "alpha_renyi"
+# }
+# 
+# if("log_kl_multiplier" %in% fctr){
+#   reg <- "kl_div"
+# }
+# 
+# if(reg == "alpha_renyi"){
+#   main_labs <- c(as.expression(bquote("RMSE from " * alpha * "-Renyi Divergence")), as.expression(bquote("Interval Score from " * alpha * "-Renyi Divergence")))
+# }
+# 
+# if(reg == "kl_div"){
+#   main_labs <- c(as.expression(bquote("RMSE from KL Divergence")), as.expression(bquote("Interval Score from KL Divergence")))
+# }
+
+dgms <- c("x1d", "x2d")
+dgm <- dgms[1]
+responses <- c("iscore", "rmse")
+response <- responses[1]
+
+if(dgm == "x1d"){
+  dgm_lab <- ", 1D X"
+}else if(dgm == "x2d"){
+  dgm_lab <- ", 2D X"
+}
+
+
+fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+          "initial_samples", "log_lr", "prior_mu", "alpha")
+
+plt_lookup <- expand.grid(responses = responses, reg = c("kl_div", "alpha_renyi"), dgm = c("x1d", "x2d"), fctr = c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+                                                            "initial_samples", "log_lr", "prior_mu", "alpha"))
+
+plt_lookup$responses <- as.character(plt_lookup$responses)
+plt_lookup$reg <- as.character(plt_lookup$reg)
+plt_lookup$dgm <- as.character(plt_lookup$dgm)
+plt_lookup$fctr <- as.character(plt_lookup$fctr)
+
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "kl_div" & plt_lookup$fctr == "alpha"), ]
+plt_lookup <- plt_lookup[-which(plt_lookup$reg == "alpha_renyi" & plt_lookup$fctr == "log_kl_multiplier"), ]
+
+tmp <- data.frame(matrix(1, ncol = 3, nrow = nrow(plt_lookup)))
+
+names(tmp) <- c("pch", "lty", "col")
+
+
+plt_lookup <- cbind(plt_lookup,tmp)
+
+cols <- pchs <- data.frame(matrix(NA, ncol = 2, nrow = 8))
+## pch can indicate both data generating mechanism and response type
+names(pchs) <- c("iscore", "rmse")
+pchs$iscore <- c(0,1,2,5,4,3,6,8)
+pchs$rmse <- c(15,19,17,18,7,10,25,9)
+pchs$rmse <- pchs$iscore
+
+names(cols) <- c("iscore", "rmse")
+
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- hcl.colors(8, palette = "Zissou1")
+cols$rmse <- cols$iscore
+
+# Indicates data generating mechanism
+ltys <- c(1,2)
+
+## Regression method must therefore be indicated by plot title
+
+for(i in 1:nrow(plt_lookup)){
+
+  res <- plt_lookup$responses[i]
+  r <- plt_lookup$reg[i]
+  d <- plt_lookup$dgm[i]
+  f <- plt_lookup$fctr[i]
+
+  plt_lookup$pch[i] <- pchs[[res]][fctrs %in% f]
+  plt_lookup$lty[i] <- ltys[dgms %in% d]
+  plt_lookup$col[i] <- cols[[res]][fctrs %in% f]
+
+}
+
+toplt <- expand.grid(reg = reg, dgm = dgm, response = response, fctr = fctr)
+
+toplt <- as.data.frame(apply(toplt, 2, as.character))
+
+toplt <- toplt[-which(toplt$reg == "alpha_renyi" & toplt$fctr == "log_kl_multiplier"),]
+
+toplt <- toplt[-which(toplt$reg == "kl_div" & toplt$fctr == "alpha"),]
+
+fctr_labs <- data.frame(matrix(NA, ncol = 4, nrow = length(fctrs)))
+names(fctr_labs) <- c("sname", "legname", "pch", "col")
+
+fctr_labs$sname <- fctrs
+fctr_labs$legname <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")),
+  as.expression(bquote("log"[10] * "(" * sigma[0] * ")")),
+  as.expression("\nOptimizer\n   Steps"),
+  as.expression("NN Weights"),
+  as.expression("Samples for\n Integration"),
+  as.expression(bquote("log"[10] * "(LR)")),
+  as.expression(bquote(mu[0])),
+  as.expression(bquote(alpha)))
+
+fctr_labs$pch <- pchs$rmse
+fctr_labs$col <- cols$rmse
+
+plot_combos <- paste(reg, dgm, sep = "_")
+
+
+# Function to dynamically get jitter bounds
+get_jitter_bounds <- function(data_matrix, jitter_amount = 0.2) {
+  num_vars <- ncol(data_matrix)
+  jittered_positions <- list()
+  bounds <- matrix(NA, ncol = num_vars, nrow = 2)  # Store min/max for each variable
+
+  for (i in 1:num_vars) {
+    jitter_vals <- jitter(rep(i, nrow(data_matrix)), amount = jitter_amount)
+    jittered_positions[[i]] <- jitter_vals
+    bounds[, i] <- range(jitter_vals)  # Min and Max x-position for jittered points
+  }
+
+  return(list(jittered_positions = jittered_positions, bounds = bounds))
+}
+
+
+layout(matrix(1:4, ncol = 2, nrow = 2, byrow = TRUE))
+
+for(j in 1:2){
+  
+  ind <- c("S", "T")[j]
+  
+  ## Select the correct combo of regression method and sensitivity index
+  # Constant dgm
+  
+  sens_dat <- results[[response]][[plot_combos[1]]]$sens[[ind]]
+  
+  sens_stats <- data.frame(matrix(NA, ncol = length(fctrs)-1, nrow = 2))
+  names(sens_stats) <-  names(results[[response]][[plot_combos[1]]]$X)
+  row.names(sens_stats) <- c("mean", "var")
+  
+  sens_dat[sens_dat < 0] <- 0
+
+  sens_stats[1,] <- apply(sens_dat,2,median)
+  sens_stats[2,] <- apply(sens_dat,2,var)
+  
+  sens_dat <- data.frame(sens_dat)
+  names(sens_dat) <- names(results[[response]][[plot_combos[1]]]$X)
+  
+  
+  
+  
+  fctrs_plot <- toplt$fctr[toplt$reg == "kl_div"]
+  
+  data_jitter <- get_jitter_bounds(sens_dat[fctrs_plot])$bounds
+  
+  if(ind == "S"){
+    sens_lab <- ", First Order Sensitivity"
+    ylab <- "First Order Sensitivity"
+  }else if(ind == "T"){
+    sens_lab <- ", Total Sensitivity"
+    ylab <- "Total Sensitivity"
+  }
+  
+  #main_lab <- bquote("KL Divergence" * .(sens_lab))
+  main_lab <- paste("KL Divergence", dgm_lab, sep = "")
+  
+  
+  
+  
+  boxplot(x = sens_dat[fctrs_plot],
+          col = fctr_labs$col[fctr_labs$sname %in% fctrs_plot], 
+          xlab = "",
+          xaxt = "n",#fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)],
+          main = main_lab,
+          ylab = ylab)
+  
+  # stripchart(sens_dat[fctrs_plot],
+  #          vertical = TRUE,
+  #          method = "jitter",
+  #          jitter = 0.2,
+  #          pch = 16, col = "gray85",
+  #          main = main_lab,#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+  #          ylab = "", xlab = "",
+  #          xaxt = "n", ylim = c(0, range(sens_dat[fctrs_plot])[2]))
+  # 
+  tickPositions <- 1:(length(fctrs_plot))
+  # First, draw the axis without labels.
+  axis(1, at = tickPositions, labels = FALSE)
+
+  for (i in seq_along(tickPositions)) {
+  # Set extra offset for tick labels 3 and 4
+  # extraLine <- if (i %in% c(3, 4)) 2 else 1
+  extraline <- 1
+  mtext(fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+  }
+  # 
+  # 
+  for(i in 1:length(fctrs_plot)){
+    mean_use <- sens_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+  #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+    #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black",#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]],
+     #     lwd = 2, lty = 1)
+  #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+    points(i, mean_use, pch = fctr_labs$pch[fctr_labs$sname == fctrs_plot[i]], cex = 1.5, lwd = 1.6, 
+           col ="white"#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]])
+           )
+    }
+
+  
+  ### Alpha renyi plot:
+  sens_dat <- results[[response]][[plot_combos[2]]]$sens[[ind]]
+  
+  sens_stats <- data.frame(matrix(NA, ncol = length(fctrs)-1, nrow = 2))
+  names(sens_stats) <-  names(results[[response]][[plot_combos[2]]]$X)
+  row.names(sens_stats) <- c("mean", "var")
+  
+  #sens_dat[sens_dat < 0] <- 0
+
+  sens_stats[1,] <- apply(sens_dat,2,median)
+  sens_stats[2,] <- apply(sens_dat,2,var)
+  
+  sens_dat <- data.frame(sens_dat)
+  names(sens_dat) <- names(results[[response]][[plot_combos[2]]]$X)
+  
+  
+  
+  
+  fctrs_plot <- toplt$fctr[toplt$reg == "alpha_renyi"]
+  
+  #data_jitter <- get_jitter_bounds(sens_dat[fctrs_plot])$bounds
+
+  
+  #main_lab <- bquote("KL Divergence" * .(sens_lab))
+  main_lab <- bquote(alpha * "-Renyi" * .(sens_lab))
+  
+  
+  
+  
+  boxplot(x = sens_dat[fctrs_plot],
+          col = fctr_labs$col[fctr_labs$sname %in% fctrs_plot], 
+          xlab = "",
+          xaxt = "n",#fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)],
+          main = main_lab,
+          ylab = ylab)
+  
+  # stripchart(sens_dat[fctrs_plot],
+  #          vertical = TRUE,
+  #          method = "jitter",
+  #          jitter = 0.2,
+  #          pch = 16, col = "gray85",
+  #          main = main_lab,#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+  #          ylab = "", xlab = "",
+  #          xaxt = "n", ylim = c(0, range(sens_dat[fctrs_plot])[2]))
+  # 
+  tickPositions <- 1:(length(fctrs_plot))
+  # First, draw the axis without labels.
+  axis(1, at = tickPositions, labels = FALSE)
+
+  for (i in seq_along(tickPositions)) {
+  # Set extra offset for tick labels 3 and 4
+  # extraLine <- if (i %in% c(3, 4)) 2 else 1
+  extraline <- 1
+  mtext(fctr_labs$legname[match(fctrs_plot, fctr_labs$sname)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+  }
+  # 
+  # 
+  for(i in 1:length(fctrs_plot)){
+    mean_use <- sens_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+  #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+    #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black",#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]],
+     #     lwd = 2, lty = 1)
+  #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+    points(i, mean_use, pch = fctr_labs$pch[fctr_labs$sname == fctrs_plot[i]], cex = 1.5, lwd = 1.6, 
+           col ="white"#fctr_labs$col[fctr_labs$sname == fctrs_plot[i]])
+           )
+    }
+
+}
+# sens_i2 <- 1 ## Sensitivity index, index
+# sens_type <- c("S", "T")[sens_i2] ## equivalent to c("First order", "Total")
+# ylab1 <- c("First Order Sensitivity Index", "Total Sensitivity Index")[sens_i2]
+# 
+# 
+# mar_use <- c(4.5, 4.5, 1 , 1.5)
+# 
+# # 
+# # kl_fctrs_use <-  c("log_kl_multiplier",
+# #                    "log_sigma",
+# #                    "num_steps",
+# #                    "initial_samples",
+# #                    "log_lr"
+# # )
+# # 
+# # a_fctrs_use <- c("alpha",
+# #                  "log_sigma",
+# #                  "num_steps",
+# #                  "initial_samples",
+# #                  "log_lr")
+# # ufctrs <- unique(c(kl_fctrs_use, a_fctrs_use))
+# # 
+# # fctr_lookup <- data.frame(matrix(NA, nrow = length(ufctrs), ncol = 4))
+# # pchs <- c(16,4,5,17,8,16,4,5,17,8)
+# # 
+# # names(fctr_lookup) <- c("fctr", "col","pch","label")
+# # fctr_lookup$fctr <- ufctrs
+# # fctr_lookup$col <- hcl.colors(n = length(ufctrs))
+# # fctr_lookup$pch <- pchs[1:length(ufctrs)]
+# # fctr_lookup$label <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")), as.expression(bquote("log"[10] * "(" * sigma[0] * ")")), as.expression("Optimizer\n   Steps"), as.expression("Samples for\n Integration"), as.expression(bquote("log"[10] * "(LR)")), as.expression(bquote(alpha)))
+# # #fctr_lookup$label <- c("Loss Weight\nFactor","Prior\nVariance", "Optimizer\nSteps", "Samples for\n Integration", "Learning\nRate", "alpha")
+# # 
+# # 
+# # 
+# # metric <- c("interval_score_calculate", "interval_score_assess", "coverage_rate",
+# #             "rmse")[1]
+# # 
+# # if(reg_type == "kl_div"){
+# # fctrs <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
+# #            "initial_samples", "log_lr", "prior_mu")
+# # }else if(reg_type == "alpha_renyi"){
+# #   fctrs <- c("alpha", "log_sigma", "num_steps", "num_weights", "initial_samples",
+# #                "log_lr", "prior_mu")
+# # }
+# # 
+# # fctr <- "log_sigma"
+# 
+# reg_dat <- paste0(reg_type, "_", data_gen)
+# 
+# first_order_stats <- data.frame(matrix(NA, ncol = length(fctrs), nrow = 2))
+# names(first_order_stats) <- fctrs
+# row.names(first_order_stats) <- c("mean", "var")
+# 
+# sens_fits <- results$sens[[reg_dat]]
+# 
+# first_order_stats[1,] <- apply(sens_fits$sens[[sens_type]],2,mean)
+# first_order_stats[2,] <- apply(sens_fits$sens[[sens_type]],2,var)
+# 
+# first_order <- sens_fits$sens[[sens_type]]
+# 
+# 
+# fctr_cols <- hcl.colors(n = length(fctrs), palette = "Zissou1")
+# 
+# if(reg_type == "kl_div"){
+#   fctrs_plot <- kl_fctrs_use
+# }else if(reg_type == "alpha_renyi"){
+#   fctrs_plot <- a_fctrs_use
+# }
+# 
+# fctrs_use <- fctrs_plot
+# 
+# first_order <- data.frame(first_order)
+# names(first_order) <- fctrs
+# 
+# #fctrs_plot <- fctrs
+# 
+# # Function to dynamically get jitter bounds
+# get_jitter_bounds <- function(data_matrix, jitter_amount = 0.2) {
+#   num_vars <- ncol(data_matrix)
+#   jittered_positions <- list()
+#   bounds <- matrix(NA, ncol = num_vars, nrow = 2)  # Store min/max for each variable
+# 
+#   for (i in 1:num_vars) {
+#     jitter_vals <- jitter(rep(i, nrow(data_matrix)), amount = jitter_amount)
+#     jittered_positions[[i]] <- jitter_vals
+#     bounds[, i] <- range(jitter_vals)  # Min and Max x-position for jittered points
+#   }
+# 
+#   return(list(jittered_positions = jittered_positions, bounds = bounds))
+# }
+# 
+# data_jitter <- get_jitter_bounds(first_order[fctrs_plot])$bounds
+# 
+# 
+# par(mar = mar_use)
+# 
+# #custom_labels <- c(as.expression(bquote("log"[10] * "(" * gamma * ")")), as.expression(bquote("log"[10] * "(" * sigma * ")")), "Optimizer\nSteps", "Layer\nWeights", "Monte-Carlo\nSamples", bquote("log"[10] * "(LR)"), bquote(mu["0"]))[fctrs %in% fctrs_plot]#c("A", "B", "C", "D", "E", "F", "G")
+# 
+# stripchart(first_order[fctrs_plot],
+#            vertical = TRUE,
+#            method = "jitter",
+#            jitter = 0.2,
+#            pch = 16, col = "gray85",
+#            main = "",#bquote("p(" * theta * "|y) = " * "arg" * min("KL[" * q * "(" * theta * ")|p(" * theta * "|y)]", "q      ")),
+#            ylab = ylab1, xlab = "",
+#            xaxt = "n", ylim = c(0, range(first_order[fctrs_plot])[2]))#c(0,0.4))#,
+# #ylim = ylim)
+# 
+# #axis(1, at = 1:ncol(first_order_KL[fctrs_plot]), labels = custom_labels)  # las=2 rotates labels
+# #axis(1, at = 1:ncol(first_order_KL[fctrs_plot]), labels = fctr_lookup$label[match(kl_fctrs_use, fctr_lookup$fctr)])  # las=2 rotates labels
+# tickPositions <- 1:6
+# # First, draw the axis without labels.
+# axis(1, at = tickPositions, labels = FALSE)
+# 
+# # Now, add the labels manually with mtext.
+# # We loop over the tick positions, and for positions 3 and 4 we use a larger 'line' value.
+# 
+# 
+# for (i in seq_along(tickPositions)) {
+#   # Set extra offset for tick labels 3 and 4
+#   # extraLine <- if (i %in% c(3, 4)) 2 else 1
+#   extraline <- 1
+#   mtext(fctr_lookup$label[match(fctrs_use, fctr_lookup$fctr)][i], side = 1, at = tickPositions[i], line = 1 + extraline, cex = 0.8)
+# }
+# 
+# 
+# for(i in 1:length(fctrs_plot)){
+#   mean_use <- first_order_stats[[fctrs[fctrs %in% fctrs_plot[i]]]][1]
+#   #lines(data_jitter[,i],rep(mean_use, times = 2), col = "black", lwd = 3, lty = 3)
+#   lines(data_jitter[,i],rep(mean_use, times = 2), col = fctr_lookup$col[fctr_lookup$fctr == fctrs_plot[i]], lwd = 2, lty = 1)
+#   #points(mean(data_jitter[,i]), mean_use, pch = 4, cex = 1.6, col ="black", lwd = 2)
+#   points(mean(data_jitter[,i]), mean_use, pch = fctr_lookup$pch[fctr_lookup$fctr == fctrs_plot[i]], cex = 1.5, lwd = 1.6, col =fctr_lookup$col[fctr_lookup$fctr == fctrs_plot[i]])
+# }
+
+
+```
+
+# Best and Worst Plots
+
 # Appendix Plots
 
 ## Main Effects
@@ -1137,7 +3638,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -1350,7 +3851,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -1563,7 +4064,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -1776,7 +4277,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -1991,7 +4492,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -2204,7 +4705,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -2417,7 +4918,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -2630,7 +5131,7 @@ pchs$rmse <- pchs$iscore
 
 names(cols) <- c("iscore", "rmse")
 
-cols$iscore <- hcl.colors(8, palette = "Viridis")
+cols$iscore <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- hcl.colors(8, palette = "Zissou1")
 cols$rmse <- cols$iscore
 
@@ -2783,6 +5284,8 @@ par(mar = c(0, 1, 1, 0))
 plot.new()
 legend("topleft", legend = fctr_labs$legname, col = fctr_labs$col, pch = fctr_labs$pch, lty = 1, ncol = 1, title = "Factors", bty = "n")
 ```
+
+
 
 
 

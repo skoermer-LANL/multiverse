@@ -84,7 +84,7 @@ x_plot_tensor = torch.tensor(rescale_x(x_plot)).float().unsqueeze(1)
 true_function_rescaled = rescale_y(true_function(x_plot), Ey_mean, true_scaling)
 
 # === Plotting Setup ===
-fig, axes = plt.subplots(3, 2, figsize=(8, 7), gridspec_kw={'height_ratios': [1, 1, 0.07]}, sharex='col')
+fig, axes = plt.subplots(3, 2, figsize=(8, 6), gridspec_kw={'height_ratios': [1, 1, 0.01]}, sharex='col')
 axes_flat = axes.flatten()
 
 plot_idx = 0
@@ -128,13 +128,15 @@ for j, method in enumerate(methods):
 
         # Updated point styling
         ax.scatter((X_train.squeeze().cpu().numpy() * 4) - 2, y_train.squeeze().cpu().numpy(), 
-                   label="Train Data", color="red", marker="o", s=10, alpha=0.4, edgecolor='k', linewidth=0.2)
+                   label="Training Data", color="red", marker="o", s=10, alpha=0.4, edgecolor='k', linewidth=0.2)
         ax.scatter((X_test.squeeze().cpu().numpy() * 4) - 2, y_test.squeeze().cpu().numpy(), 
                    label="Test Data", color="green", marker="^", s=10, alpha=0.4, edgecolor='k', linewidth=0.2)
 
         method_title = r"KL Divergence" if method == "kl_div" else r"$\alpha$-Renyi"
         title_text = f"{'Best' if fit_quality == 'best' else 'Worst'} Fit\n{method_title}"
         ax.set_title(title_text, fontsize=10)
+
+        ax.tick_params(axis='x', labelbottom=True)
 
         ax.set_xlabel("x")
         ax.set_ylabel("y")
@@ -147,8 +149,8 @@ for idx in [4, 5]:
 
 # Create shared legend at bottom
 handles, labels = axes_flat[0].get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower center', ncol=4, bbox_to_anchor=(0.5, -0.01), frameon=False, fontsize='small')
+fig.legend(handles, labels, loc='lower center', ncol=len(labels), bbox_to_anchor=(0.5, 0.01), frameon=False, fontsize='medium')
 
-plt.tight_layout(rect=[0, 0.06, 1, 1])
+plt.tight_layout(rect=[0, 0.008, 1, 1])
 plt.savefig(f"../figures/best_worst_x1d_{metric}.pdf", dpi=300)
 print(f"Plot saved as: figures/best_worst_x1d_{metric}.pdf")
