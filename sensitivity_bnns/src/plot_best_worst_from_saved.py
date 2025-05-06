@@ -19,8 +19,12 @@ for method in methods:
     results_df = pd.read_csv(os.path.join(result_dir, "merged_results.csv"))
 
     # Get best/worst by selected metric
-    best_idx = results_df[metric].idxmin()
-    worst_idx = results_df[metric].idxmax()
+    best_pos = results_df[metric].idxmin()
+    best_idx = results_df.loc[best_pos, "lhs_row"]
+
+    worst_pos = results_df[metric].idxmax()
+    worst_idx = results_df.loc[worst_pos, "lhs_row"]
+
 
     for i, idx in enumerate([best_idx, worst_idx]):
         fname = os.path.join(result_dir, "plotdata", f"plot_{idx:04d}.npz")

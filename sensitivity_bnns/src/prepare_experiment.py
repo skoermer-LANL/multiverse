@@ -68,9 +68,12 @@ def generate_and_save_poly_1d(save_dir, n_train=50, n_test=200, truesd=0.5, seed
     x_test_rescaled = (x_test + 2) / 4
 
     torch.save(x_train_rescaled, os.path.join(save_dir, "X_train.pt"))
+    # scaled
     torch.save(y_train, os.path.join(save_dir, "y_train.pt"))
     torch.save(x_test_rescaled, os.path.join(save_dir, "X_test.pt"))
+    #scaled
     torch.save(y_test, os.path.join(save_dir, "y_test.pt"))
+    #scaled
     torch.save(sig2scale.clone().detach(), os.path.join(save_dir, "noise_var.pt"))
 
     print(f"[x1d] Data saved to {save_dir} | Scaled noise variance: {sig2scale.item():.5f}")

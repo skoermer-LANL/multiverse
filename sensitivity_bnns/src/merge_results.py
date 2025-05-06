@@ -14,9 +14,14 @@ def merge_results(method, dgm, results_dir="results"):
     df_list = [pd.read_csv(f) for f in files]
     merged_df = pd.concat(df_list, ignore_index=True)
 
+    # Sort by lhs_row if present
+    if "lhs_row" in merged_df.columns:
+        merged_df.sort_values("lhs_row", inplace=True)
+        merged_df.reset_index(drop=True, inplace=True)
+
     output_file = os.path.join(result_path, "merged_results.csv")
     merged_df.to_csv(output_file, index=False)
-    print(f"Merged {len(files)} files into {output_file}")
+    print(f"Merged and sorted {len(files)} files into {output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Merge individual result CSVs into one.")

@@ -57,8 +57,8 @@ def main(method, dgm, index, custom_lhs=None):
 
     # === Save plotting data if dgm == 'x1d'
     if dgm == "x1d":
-        # Generate predictive samples on fine grid
-        x_plot = np.linspace(-2, 2, 400)
+        # Generate predictive samples on fine grid, and rescale
+        x_plot = np.linspace(-2, 2, 200)
         x_plot_tensor = torch.tensor((x_plot + 2) / 4).float().unsqueeze(1)
 
         predictive_samples = generate_predictive_samples(
@@ -67,6 +67,8 @@ def main(method, dgm, index, custom_lhs=None):
             num_samples=1000,
             known_variance=noise_var
         )
+
+        ## does this actually make sense?? Take the mean of the function prediction and then find the hdr??  If this is the case, then no
 
         mean_pred, lower_pred, upper_pred = [], [], []
         for x_val in x_plot_tensor:
@@ -81,16 +83,25 @@ def main(method, dgm, index, custom_lhs=None):
                 upper_pred.append(np.percentile(samples, 95))
 
         # Compute rescaled true function for overlay
+        ## Puts X_train on [-2,2] and then evaluates the expected value of the true function
         Ey = (X_train.squeeze().numpy() * 4 - 2)**3 - (X_train.squeeze().numpy() * 4 - 2)**2 + 3
+        ## Mean of the training data for an unscaled response
         Ey_mean = Ey.mean()
+        ## Variance over x of the expected value for the the training data
         Ey_var = Ey.var(ddof=0)
-        y_scaling = np.sqrt(Ey_var + noise_var)
+
+        truevar = noise_var * Ey_mean/(1-noise_var)
+        #y_scaling = np.sqrt(Ey_var + noise_var)
+        y_scaling = np.sqrt(truevar + Ey_var)
+        # Uses the unscaled x_plot to generate a scaled evaluation of the function, x_plot is on the natural scale
         true_func_rescaled = (x_plot**3 - x_plot**2 + 3 - Ey_mean) / y_scaling
 
         # Prepare save path
         plotdata_dir = os.path.join(result_dir, "plotdata")
         os.makedirs(plotdata_dir, exist_ok=True)
         save_path = os.path.join(plotdata_dir, f"plot_{idx:04d}.npz")
+
+        ## Saves unscaled X's, but saves scaled ys and intervals related to y
 
         np.savez(save_path,
                 x_plot=x_plot,
