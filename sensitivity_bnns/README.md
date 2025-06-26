@@ -2,7 +2,7 @@
 
 This repository accompanies a study on Bayesian neural network (BNN) regression using variational inference with different divergence objectives and under multiple synthetic data generating mechanisms.
 
-The experiments explore the impact of hyperparameter tuning using Latin Hypercube Sampling (LHS), and evaluate model performance using metrics such as RMSE, interval score, and posterior coverage.
+The experiments explore the impact of hyperparameter tuning on RMSE, interval score, and posterior coverage.
 
 
 ##  Directory Structure
