@@ -29,12 +29,15 @@ for(i in folders){
 
 }
 
-# for(i in folders){
-#
-#   plot(results$sens[[i]], layout = "sens", main = i)
-#   plot(results$sens[[i]], layout = "sens", maineff = t(1:7))
-#
-# }
+for(i in folders){
+
+  plot(results$iscore[[i]], layout = "sens", main = paste0(i, " iscore"))
+  #plot(results$iscore[[i]], layout = "sens", maineff = t(1:7))
+
+  plot(results$rmse[[i]], layout = "sens", main = paste0(i, " rmse"))
+  #plot(results$rmse[[i]], layout = "sens", maineff = t(1:7))
+
+}
 
 # XXmins <- qmins<- list()
 #

@@ -3,6 +3,7 @@
 #SBATCH --output=logs/tgp_%x_%j.out
 #SBATCH --error=logs/tgp_%x_%j.err
 #SBATCH --time=10:00:00
+#SBATCH --mem=250G
 # Constraint added dynamically via sbatch --constraint=...
 
 module purge

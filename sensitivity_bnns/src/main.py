@@ -12,7 +12,7 @@ import torch
 
 def main(method, dgm, index, custom_lhs=None):
     # Get paths to data and results
-    lhs_file, train_dir, test_dir, result_dir = get_paths(method, dgm)
+    lhs_file, train_dir, result_dir = get_paths(method, dgm)
     os.makedirs(result_dir, exist_ok=True)
 
     # Override LHS file path if provided

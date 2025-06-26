@@ -42,10 +42,10 @@ param_specs_raw <- yaml::read_yaml("param_specs_v1.yaml")
 
 # Convert to flat key format like before
 param_specs <- list()
-for (method in names(param_specs_raw)) {
-  for (dgm in names(param_specs_raw[[method]])) {
-    key <- paste(method, dgm, sep = "_")
-    param_specs[[key]] <- param_specs_raw[[method]][[dgm]]
+for (m in names(param_specs_raw)) {
+  for (d in names(param_specs_raw[[m]])) {
+    key <- paste(m, d, sep = "_")
+    param_specs[[key]] <- param_specs_raw[[m]][[d]]
   }
 }
 

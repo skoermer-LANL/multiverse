@@ -6,6 +6,7 @@
 *.xlsx
 *.json
 *.feather
+*.npz
 
 # --------------------------
 # Python artifacts
@@ -53,3 +54,4 @@ figures/
 # --------------------------
 
 *.pdf
+*.tex
