@@ -38,7 +38,7 @@ def calculate_rmse(model, x, y, num_samples=100):
     return rmse
 
 def assess_coverage_and_interval_score(
-    model, x, y, alpha_levels=None, num_samples=1000, known_variance=1.0, hdr_resolution=1000
+    model, x, y, alpha_levels=0.05, num_samples=1000, known_variance=1.0, hdr_resolution=1000
 ):
     """
     Assess coverage and calculate interval score for a Bayesian Neural Network using HDR methodology.
@@ -60,9 +60,9 @@ def assess_coverage_and_interval_score(
         - "scores_per_point": Per-point interval scores for each alpha level.
         - "coverage_results": Per-point coverage results for each alpha level.
     """
-    input_dim = x.shape[1]  # Dynamically determine input dimension
-    if alpha_levels is None:
-        alpha_levels = [0.05]  # Default to 95% HDR
+    #input_dim = x.shape[1]  # Dynamically determine input dimension
+    #if alpha_levels is None:
+    #    alpha_levels = [0.05]  # Default to 95% HDR
 
     # Generate predictive samples
     predictive_samples_dict = generate_predictive_samples(
@@ -73,10 +73,10 @@ def assess_coverage_and_interval_score(
     use_float_keys = isinstance(next(iter(predictive_samples_dict.keys())), float)
 
     # Convert predictive samples to NumPy array for easier processing
-    predictive_samples_np = np.array([
-        predictive_samples_dict[float(x_val) if use_float_keys else tuple(x_val.tolist())]
-        for x_val in x
-    ])
+    #predictive_samples_np = np.array([
+    #    predictive_samples_dict[float(x_val) if use_float_keys else tuple(x_val.tolist())]
+    #    for x_val in x
+    #])
 
     results = {
         "interval_scores": [],

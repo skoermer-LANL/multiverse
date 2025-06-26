@@ -1,138 +1,184 @@
 # Bayesian Neural Network Regression Experiments
 
-SUMMARY
+This repository accompanies a study on Bayesian neural network (BNN) regression using variational inference with different divergence objectives and under multiple synthetic data generating mechanisms.
+
+The experiments explore the impact of hyperparameter tuning using Latin Hypercube Sampling (LHS), and evaluate model performance using metrics such as RMSE, interval score, and posterior coverage.
 
 
-##  1. Generating Synthetic Data & LHS Designs
+##  Directory Structure
 
-All dataset and LHS generation is handled by:
-
-```bash
-python src/prepare_experiment.py
 ```
 
+.
+├── src/                      # All Python and R code
+│   ├── alpha\_renyi.py        # α-Rényi divergence BNN training logic
+│   ├── kl\_div.py             # KL divergence BNN training logic
+│   ├── config.py             # File paths and noise variance for each DGM
+│   ├── utils.py              # LHS and data loading helpers
+│   ├── evaluate.py           # Evaluation metrics (RMSE, interval score, HDR)
+│   ├── prepare\_experiment.py # Generates datasets and LHS samples
+│   ├── main.py               # Runs one regression for one set of parameters
+│   ├── run\_batch.py          # Helper to run batches from custom CSVs
+│   ├── merge\_results.py      # Merges result CSVs per experiment
+│   ├── plot\_best\_worst\_from\_saved.py # Makes diagnostic plots from saved results
+│   ├── test\_all\_local.py     # Utility for running local test sweeps
+│   ├── run\_tgp\_plot.R        # Posterior surface visualization with TGP
+│   ├── run\_tgp\_sens.R        # Global sensitivity analysis using TGP
+│
+├── lhs/                      # LHS hyperparameter grids
+├── data/                     # Generated training/testing datasets (.pt)
+├── results/                  # Individual and merged fit results
+├── figures/                  # Publication-quality plots
+├── environment.yml           # Conda environment file (minimal)
+├── requirements.txt          # Python package list
+├── .gitignore
+└── README.md                 # This file
 
-###  Command-Line Usage
+````
+
+
+##  Setup Instructions
+
+###  Using Conda (Recommended)
 
 ```bash
-python src/prepare_experiment.py [--lhs METHOD DGM] [--samples N] [--data]
-```
+conda env create -f environment.yml
+conda activate bnnreg
+````
 
-###  Examples
-
-#### Generate everything (default):
-Generates both 1D and 2D datasets and all 4 LHS files with 100 samples each.
-
-```bash
-python src/prepare_experiment.py
-```
-
-#### Generate only the training/testing datasets (1D and 2D):
-```bash
-python src/prepare_experiment.py --data
-```
-
-#### Generate only a specific LHS (e.g., alpha_Renyi on 1D inputs):
-```bash
-python src/prepare_experiment.py --lhs alpha_renyi x1d --samples 50
-```
-
-#### Generate all LHS files with a specific number of samples:
-```bash
-python src/prepare_experiment.py --samples 25
-```
-
-##  2. Setting Up the Python Environment
-
-You can use **Conda** (recommended) or `venv`.
-
-### Option A: Conda (Recommended)
-
-Create the environment:
+Or manually:
 
 ```bash
 conda create -n bnnreg python=3.10
 conda activate bnnreg
-```
-
-Install packages:
-
-```bash
 pip install -r requirements.txt
 ```
 
-Or recreate from YAML (if available):
+
+
+##  1. Generate Data + LHS Designs
+
+All synthetic data and hyperparameter samples are generated using:
 
 ```bash
-conda env create -f environment.yml
-conda activate bnnreg
+python src/prepare_experiment.py
 ```
 
-### Option B: Using `venv`
+###  Optional Arguments:
+
+* `--data`: generate training/testing datasets only
+* `--lhs METHOD DGM`: generate LHS for method/DGM combo
+* `--samples N`: number of LHS samples to generate
+
+###  Examples
 
 ```bash
-python3.10 -m venv env
-source env/bin/activate
-pip install -r requirements.txt
+# Generate everything
+python src/prepare_experiment.py
+
+# Only generate LHS for α-Rényi on 1D input
+python src/prepare_experiment.py --lhs alpha_renyi x1d --samples 100
 ```
 
-## 3. Dependency Tracking
 
-This repo supports both `requirements.txt` and `environment.yml`.
+##  2. Run Regression Experiments
 
-### ✅ `requirements.txt`
-
-Install with:
+To run a single experiment:
 
 ```bash
-pip install -r requirements.txt
+python src/main.py kl_div x1d 42
 ```
 
-Sample contents:
+Where:
 
-```text
-# Requires Python >= 3.10
-torch>=2.0
-numpy
-pandas
-scipy
-```
+* `kl_div` or `alpha_renyi` are methods
+* `x1d` or `x2d` are data generating mechanisms
+* `42` is the row index in the LHS .csv file
 
-### `environment.yml` (optional)
-
-Export from Conda:
+You can run batches with:
 
 ```bash
-conda env export --from-history > environment.yml
+python src/run_batch.py kl_div x1d custom_inputs.csv
 ```
 
-Recreate environment:
+Or for local parallel testing:
 
 ```bash
-conda env create -f environment.yml
+python src/test_all_local.py
 ```
 
-## 5. Methods and Data Mechanisms
 
-### Regression Methods:
+##  3. Merge Results
 
-- `kl_div` — Variational BNN with KL divergence
-- `alpha_renyi` — Posterior approximation using alpha-Rényi divergence
-
-### Data Generating Mechanisms:
-
-- `x1d` — Univariate input in [0, 1]
-- `x2d` — Bivariate input in [0, 1]^2
-
----
-
-## 6. Merging Results After Experiment Runs
-
-Each experiment writes its results to separate files for safe parallel execution.
-
-To merge them into a single CSV after all runs complete:
+After experiments complete, merge the individual CSV outputs:
 
 ```bash
-python src/merge_results.py METHOD DGM
+python src/merge_results.py kl_div x1d
 ```
 
+This creates:
+
+```
+results/kl_div_x1d/merged_results.csv
+```
+
+
+
+##  4. Plot Best/Worst Fits
+
+Generate plots using saved posterior summaries:
+
+```bash
+python src/plot_best_worst_from_saved.py interval_score kl_div
+python src/plot_best_worst_from_saved.py both_metrics alpha_renyi
+```
+
+This creates PDF and CSV summaries in `figures/` and `results/`.
+
+
+
+##  5. Sensitivity Analysis and Visualization (R)
+
+You may have to edit arguments in the script related to Monte Carlo methods.
+
+###  TGP Sensitivity:
+
+```r
+source("src/run_tgp_sens.R")
+```
+
+### Predictive Plot Surface:
+
+```r
+source("src/run_tgp_plot.R")
+```
+
+
+
+##  Methods and Data
+
+###  Regression Methods:
+
+* `kl_div`: Variational inference using KL divergence
+* `alpha_renyi`: Variational inference using α-Rényi divergence
+
+###  Data Generating Mechanisms:
+
+* `x1d`: $y = x^3 - x^2 + \varepsilon, \varepsilon \sim \mathcal{N}(0, \sigma^2)$
+* `x2d`: Quadratic surface in 2D (defined in `prepare_experiment.py`)
+
+
+
+##  HPC/Slurm Note
+
+This repository omits Slurm scripts due to HPC-specific constraints. To adapt the code for parallel runs:
+
+* Use your own batch scheduler to distribute calls to `main.py`
+* Ensure paths in `config.py` and `results/` are writeable per job
+* Post-process results using `merge_results.py`
+
+
+
+##  License and Citation
+
+If you use this codebase, please cite the associated publication or repository DOI (to be added upon acceptance).

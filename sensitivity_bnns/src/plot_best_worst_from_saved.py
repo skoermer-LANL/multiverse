@@ -133,11 +133,11 @@ else:
     outfile = f"figures/best_worst_x1d_from_saved_{plot_mode}_{method_suffix}.pdf"
 
 plt.savefig(outfile, dpi=300)
-print(f"✅ Saved plot to {outfile}")
+print(f"Saved plot to {outfile}")
 
 # === Save data table
 table_df = pd.DataFrame(table_rows)
 csv_outfile = outfile.replace(".pdf", ".csv").replace("figures", "results")
 os.makedirs(os.path.dirname(csv_outfile), exist_ok=True)
 table_df.to_csv(csv_outfile, index=False)
-print(f"✅ Saved summary CSV to {csv_outfile}")
+print(f"Saved summary CSV to {csv_outfile}")

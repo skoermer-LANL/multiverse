@@ -1,13 +1,16 @@
-name: varbnnenv
+name: bnnpy_3_10
 channels:
   - defaults
 dependencies:
   - python=3.10
-  - numpy
-  - pandas
-  - scipy
-  - pip
-  - pip:
-      - torch
-      - torchbnn
-
+  - jax
+  - jaxlib
+  - ipykernel
+  - matplotlib
+  - ipywidgets
+  - scikit-learn
+  - cpuonly
+  - pytorch
+  - torchaudio
+  - torchvision
+prefix: /opt/anaconda3/envs/bnnpy_3_10

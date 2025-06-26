@@ -95,6 +95,9 @@ save(sensfit, file = output_path)
 
 if(secondOrder){
 
+## Note we did not achieve good results from this method after lengthy computation
+## this numerical method returned some negative indices, but we left the option here
+
 n <- 7000
 
 
