@@ -18,55 +18,74 @@ def sample_unit_cube_excluding_hypercube(n: int,
                                          dtype=torch.float32,
                                          center: torch.Tensor | None = None):
     """
-    Sample n points uniformly from [0,1]^d excluding a random axis-aligned hypercube
-    whose volume equals `excluded_volume`.
+    Sample n points uniformly from [0,1]^d excluding an axis-aligned hypercube
+    of volume `excluded_volume`. Returns (X, l, u, center, s).
 
-    Returns
-    -------
-    X : (n, d) torch.Tensor
-        Samples in [0,1]^d \ [l, u].
-    l, u : (d,) torch.Tensor
-        Lower/upper bounds of the excluded hypercube.
+    Partition: choose the smallest index k where x_k ∉ [l_k, u_k].
+    Regions are disjoint; weights are proportional to s^(k-1) * (1 - s).
     """
-
     if not (0.0 < excluded_volume < 1.0):
         raise ValueError("excluded_volume must be in (0,1).")
 
-    s = excluded_volume ** (1.0 / d)  # side length so that s^d = excluded_volume
+    s = float(excluded_volume) ** (1.0 / d)           # side length with s^d = excluded_volume
     if s >= 1.0:
         raise ValueError("Excluded cube side >= 1. Check excluded_volume and d.")
 
+    # Pick a valid center; ensure cube stays inside [0,1]^d
     if center is None:
-        # Random center ensuring cube stays inside [0,1]^d
         center = torch.rand(d, device=device, dtype=dtype) * (1.0 - s) + (s / 2.0)
     else:
         center = torch.as_tensor(center, device=device, dtype=dtype)
         if center.numel() != d:
             raise ValueError(f"`center` must have shape ({d},).")
-        # Clamp to valid range just in case
         center = center.clamp(s / 2.0, 1.0 - s / 2.0)
 
     l = center - s / 2.0
     u = center + s / 2.0
 
-    one_minus_s = 1.0 - s
-    # Probabilities that pick each dim's lower vs upper interval
-    p_lower = l / one_minus_s                  # shape (d,)
-    p_upper = (1.0 - u) / one_minus_s          # shape (d,)
-    # (Sanity: p_lower + p_upper == 1 per dim)
+    # Region weights: for k = 0..d-1 (i.e., 1..d), V_k ∝ s^(k) * (1 - s), normalized by 1 - s^d
+    pow_s = torch.tensor([s**k for k in range(d)], device=device, dtype=dtype)
+    weights = pow_s * (1.0 - s)
+    weights = weights / (1.0 - s**d)
 
-    # Draw which side (lower/upper) to use per sample and per dimension
-    choose_lower = torch.bernoulli(p_lower.expand(n, d)).to(torch.bool)
+    # Draw region index k for each sample (0-based)
+    k_idx = torch.multinomial(weights, n, replacement=True)
 
-    # Draw uniforms for lower and upper segments
-    r_low  = torch.rand(n, d, device=device, dtype=dtype)
-    r_high = torch.rand(n, d, device=device, dtype=dtype)
+    # Prepare output
+    X = torch.empty((n, d), device=device, dtype=dtype)
 
-    X_lower = r_low * l              # uniform in [0, l_i]
-    X_upper = u + r_high * (1.0 - u) # uniform in [u_i, 1]
+    for k in range(d):
+        mask = (k_idx == k)
+        m = int(mask.sum())
+        if m == 0:
+            continue
 
-    X = torch.where(choose_lower, X_lower, X_upper)
-    return X, l, u, center, s
+        # 1) Coordinates < k are inside the excluded cube: uniform in [l_i, u_i]
+        if k > 0:
+            r_inside = torch.rand(m, k, device=device, dtype=dtype)
+            X[mask, :k] = l[:k] + r_inside * (u[:k] - l[:k])
+
+        # 2) Coordinate k exits the cube: uniform in [0, l_k] ∪ [u_k, 1]
+        lk = l[k].item()
+        uk = u[k].item()
+        len_lower = lk
+        len_upper = 1.0 - uk
+        p_lower = len_lower / (len_lower + len_upper) if (len_lower + len_upper) > 0 else 0.0
+
+        choose_lower = torch.bernoulli(torch.full((m,), p_lower, device=device, dtype=dtype)).to(torch.bool)
+        r = torch.rand(m, device=device, dtype=dtype)
+        xk = torch.empty(m, device=device, dtype=dtype)
+        if choose_lower.any():
+            xk[choose_lower] = r[choose_lower] * len_lower
+        if (~choose_lower).any():
+            xk[~choose_lower] = uk + r[~choose_lower] * len_upper
+        X[mask, k] = xk
+
+        # 3) Coordinates > k are free: uniform in [0,1]
+        if k + 1 < d:
+            X[mask, k+1:] = torch.rand(m, d - (k + 1), device=device, dtype=dtype)
+
+    return X
 
 def generate_and_save_quad_2d(save_dir, n_train=800, n_test=800, truesd=0.05, seed=123):
 
@@ -81,7 +100,7 @@ def generate_and_save_quad_2d(save_dir, n_train=800, n_test=800, truesd=0.05, se
 
     X_train = sample_unit_cube_excluding_hypercube(n = n_train, d = 6, excluded_volume =0.10)
 
-    x1, x2, x3, x4, x5, x6 = [x[..., i] for i in range(6)]
+    x1, x2, x3, x4, x5, x6 = [X_train[..., i] for i in range(6)]
 
     term1 = torch.exp(torch.sin(torch.pow(0.9 * (x1 + 0.48), 10)))
     term2 = x2 * x3
@@ -99,7 +118,7 @@ def generate_and_save_quad_2d(save_dir, n_train=800, n_test=800, truesd=0.05, se
     sig2scale = truevar / scaling2
 
     X_test = torch.rand((n_test, 6)).float().to(device)
-    x1_test, x2_test, x3_test, x4_test, x5_test, x6_test = [x[..., i] for i in range(6)]
+    x1_test, x2_test, x3_test, x4_test, x5_test, x6_test = [X_test[..., i] for i in range(6)]
 
     term1 = torch.exp(torch.sin(torch.pow(0.9 * (x1_test + 0.48), 10)))
     term2 = x2_test * x3_test
@@ -171,34 +190,33 @@ def generate_and_save_poly_1d(save_dir, n_train=50, n_test=200, truesd=0.5, seed
 
 # ------------------ LHS GENERATION ------------------
 
-'''
 PARAM_SPECS = {
     ("kl_div", "x1d"): {
         "names": ["log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
                   "initial_samples", "log_lr", "prior_mu"],
-        "ranges": [(-1, 1), (-0.5, 0.5), (2000, 20000), (2, 100), (1, 25), (-3.3, -0.3), (-2, 2)]
+        "ranges": [(-1, 0.5), (-0.5, 0.5), (5000, 25000), (2, 100), (1, 25), (-2.7, -0.75), (-2, 2)]
     },
     ("kl_div", "x2d"): {
         "names": ["log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
                   "initial_samples", "log_lr", "prior_mu"],
-        "ranges": [(-1, 1), (-0.5, 0.5), (2000, 20000), (2, 100), (1, 25), (-3.3, -0.3), (-2, 2)]
+        "ranges": [(-1, 0.5), (-0.5, 0.5), (5000, 25000), (2, 100), (1, 25), (-2.7, -0.75), (-2, 2)]
     },
     ("alpha_renyi", "x1d"): {
         "names": ["alpha", "log_sigma", "num_steps", "num_weights",
                   "initial_samples", "log_lr", "prior_mu"],
-        "ranges": [(0, 1), (-0.5, 0.5), (2000, 20000), (2, 100), (1, 25), (-3.3, -0.3), (-2, 2)]
+        "ranges": [(0, 1), (-0.5, 0.5), (5000, 25000), (2, 100), (1, 25), (-2.7, -0.75), (-2, 2)]
     },
     ("alpha_renyi", "x2d"): {
         "names": ["alpha", "log_sigma", "num_steps", "num_weights",
                   "initial_samples", "log_lr", "prior_mu"],
-        "ranges": [(0, 1), (-0.5, 0.5), (2000, 20000), (2, 100), (1, 25), (-3.3, -0.3), (-2, 2)]
+        "ranges": [(0, 1), (-0.5, 0.5), (5000, 25000), (2, 100), (1, 25), (-2.7, -0.75), (-2, 2)]
     }
 }
 
 '''
-
 with open("param_specs_v1.yaml", "r") as f:
     PARAM_SPECS = yaml.safe_load(f)
+'''
 
 def generate_lhs(param_ranges, param_names, n_samples, filename):
     sampler = qmc.LatinHypercube(d=len(param_ranges))
@@ -220,7 +238,7 @@ def generate_lhs(param_ranges, param_names, n_samples, filename):
 
 
 
-def generate_lhs_for(method, dgm, n_samples=100):
+def generate_lhs_for(method, dgm, n_samples=750):
     key = (method, dgm)
     if key not in PARAM_SPECS:
         raise ValueError(f"No parameter spec defined for method={method}, dgm={dgm}")
@@ -229,7 +247,7 @@ def generate_lhs_for(method, dgm, n_samples=100):
     generate_lhs(spec["ranges"], spec["names"], n_samples, filename)
 
 
-def generate_all_lhs(n_samples=100):
+def generate_all_lhs(n_samples=750):
     for method, dgm in PARAM_SPECS:
         generate_lhs_for(method, dgm, n_samples)
 
@@ -240,7 +258,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate experimental data and LHS files.")
     parser.add_argument("--lhs", nargs=2, metavar=("METHOD", "DGM"),
                         help="Generate LHS for specific method and DGM (e.g., --lhs alpha_renyi x1d)")
-    parser.add_argument("--samples", type=int, default=100,
+    parser.add_argument("--samples", type=int, default=750,
                         help="Number of LHS samples to generate (default: 100)")
     parser.add_argument("--data", action="store_true",
                         help="Generate all training/testing data (x1d and x2d)")
