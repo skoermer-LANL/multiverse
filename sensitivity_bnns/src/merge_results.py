@@ -4,7 +4,7 @@ import os
 import argparse
 
 def merge_results(method, dgm, results_dir="results"):
-    result_path = os.path.join(results_dir, f"{method}_{dgm}")
+    result_path = os.path.join(results_dir, f"{method}_{dgm}_rev1")
     files = sorted(glob.glob(os.path.join(result_path, "result_*.csv")))
 
     if not files:

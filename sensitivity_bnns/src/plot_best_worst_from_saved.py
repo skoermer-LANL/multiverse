@@ -38,9 +38,9 @@ else:
 
 for method in methods_to_plot:
     dgm = "x1d"
-    result_dir = f"results/{method}_{dgm}"
+    result_dir = f"results/{method}_{dgm}_rev1"
     results_df = pd.read_csv(os.path.join(result_dir, "merged_results.csv"))
-    lhs_df = pd.read_csv(f"lhs/{method}_{dgm}_lhs.csv")
+    lhs_df = pd.read_csv(f"lhs/{method}_{dgm}_lhs_rev1.csv")
     noise_var = get_noise_variance(dgm)
 
     for metric in metrics_to_plot:
