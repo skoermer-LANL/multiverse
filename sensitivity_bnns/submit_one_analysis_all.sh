@@ -1,6 +1,8 @@
 #!/bin/bash
 
-RESPONSE="interval_score"
+#RESPONSE="interval_score"
+RESPONSE1="interval_score"
+RESPONSE2="rmse"
 ANALYSIS_TYPE="sens"
 
 # 4 combinations
@@ -15,9 +17,11 @@ for i in "${!METHODS[@]}"; do
   DGM=${DGMS[$i]}
   PARTITION=${PARTITIONS[$i]}
 
-  echo "🚀 Submitting: $METHOD $DGM $RESPONSE $ANALYSIS_TYPE to partition $PARTITION"
+  #echo "🚀 Submitting: $METHOD $DGM $RESPONSE $ANALYSIS_TYPE to partition $PARTITION"
+  echo "🚀 Submitting: $METHOD $DGM $RESPONSE1 $RESPONSE2 $ANALYSIS_TYPE to partition $PARTITION"
 
-  sbatch --partition=$PARTITION run_tgp_one.sh $METHOD $DGM $RESPONSE $ANALYSIS_TYPE
+  #sbatch --partition=$PARTITION run_tgp_one.sh $METHOD $DGM $RESPONSE $ANALYSIS_TYPE
+  sbatch --partition=$PARTITION run_tgp_pair.sh $METHOD $DGM $RESPONSE1 $RESPONSE2
 done
 
 

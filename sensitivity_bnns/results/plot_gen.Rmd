@@ -123,7 +123,8 @@ for(i in folders){
 
 # Tables
 
-```{r kltable, eval = FALSE}
+```{r kltable}
+#, eval = FALSE}
 library(kableExtra)
 
 ## To
@@ -194,7 +195,8 @@ kbl(df_medians, booktabs = TRUE, col.names = colnames, caption = "First order an
 
 ```
 
-```{r arenyitable, eval = FALSE}
+```{r arenyitable}
+#, eval = FALSE}
 library(kableExtra)
 
 ## To
@@ -608,7 +610,7 @@ for(i in 1:nrow(toplt)){
   maineffpltX[,i] <- results[[toplt[i,]$response]][[reg]]$sens$Xgrid[,wcol]
 }
 
-mar.use <- c(2.5,3,0.65,0.1)
+mar.use <- c(2.5,3,0.65,0.2)
 
 layout.mat <- cbind(17:20, matrix(c(1,3,2,4,5, 7, 6, 8, 9, 11, 10, 12, 13, 15, 14, 16), ncol = 4, nrow = 4, byrow = TRUE))
 
@@ -655,7 +657,7 @@ mineff <- which.min(yplt[,1])
 abline(v = Xplt[mineff,1], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,1])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
 ylim <- range(yplt[,2], ql[,2], qu[,2])
@@ -677,7 +679,7 @@ mineff <- which.min(yplt[,2])
 abline(v = Xplt[mineff,2], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,2])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 
 resplot <- c("rmse", "iscore")[2]
@@ -717,7 +719,7 @@ mineff <- which.min(yplt[,1])
 abline(v = Xplt[mineff,1], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,1])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
 
@@ -740,7 +742,7 @@ mineff <- which.min(yplt[,2])
 abline(v = Xplt[mineff,2], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,2])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 
 fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",
@@ -2406,7 +2408,7 @@ ticks <- pretty(Xplt[,1])
 #ticks <- c(0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5)
 #axis(1, at = log10(ticks), labels = FALSE)
 #axis(1, at = log10(c(0.001, 0.01, 0.1)), labels = c(0.001, 0.01, 0.1))
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
 ylim <- range(yplt[,2], ql[,2], qu[,2])
@@ -2426,7 +2428,7 @@ mineff <- which.min(yplt[,2])
 abline(v = Xplt[mineff,2], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,2])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 # if(ncol(Xplt) > 1){
 # for(i in 2:ncol(yplt)){
@@ -2474,7 +2476,7 @@ mineff <- which.min(yplt[,1])
 abline(v = Xplt[mineff,1], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,1])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 pltlookind <- which(plt_lookup$responses == resplot & plt_lookup$reg == pltting$reg[2] & plt_lookup$dgm == pltting$dgm[2] & plt_lookup$fctr == pltting$fctr[2])
 
@@ -2495,7 +2497,7 @@ mineff <- which.min(yplt[,2])
 abline(v = Xplt[mineff,2], col ="red", lty = 3)
 
 ticks <- pretty(Xplt[,2])
-axis(1, at = ticks, labels = 10^ticks)
+axis(1, at = ticks, labels = signif(10^ticks,1))
 
 reg <- c("kl_div", "alpha_renyi")[2]
 fctr <- c("log_kl_multiplier", "log_sigma", "num_steps", "num_weights",

@@ -2,7 +2,7 @@ kl_div:
   x1d:
     names: ["log_kl_multiplier", "log_sigma", "num_steps", "num_weights", "initial_samples", "log_lr", "prior_mu"]
     ranges:
-      - [-1, 0.5]
+      - [-1.0, 0.5]
       - [-0.5, 0.5]
       - [5000, 25000]
       - [2, 100]
@@ -12,7 +12,7 @@ kl_div:
   x2d:
     names: ["log_kl_multiplier", "log_sigma", "num_steps", "num_weights", "initial_samples", "log_lr", "prior_mu"]
     ranges:
-      - [-1, 0.5]
+      - [-1.0, 0.5]
       - [-0.5, 0.5]
       - [5000, 25000]
       - [2, 100]

@@ -145,16 +145,16 @@ def generate_and_save_poly_1d(save_dir, n_train=50, n_test=200, truesd=0.5, seed
 
     # A gap in the training data space is placed on (-1.25, -0.25)
     # Code below is specific to this split, with a length of 1 out of 4
-    # Resulting in the idea to place 33% of the points in [-2,-1.25]
-    # and 67% of the points in (-1.25, 2]
-    n1 = n_train // 3
+    # Resulting in the idea to place 25% of the points in [-2,-1.25)
+    # and 75% of the points in (-0.25, 2]
+    n1 = n_train // 4
     n2 = n_train - n1
 
     u1 = torch.rand(n1, 1)
     u2 = torch.rand(n2, 1)
 
     x1 = u1 * 0.75 - 2  # -> [-2, -1.25]
-    x2 = u2 * 2.25 - 0.25 # -> [-1.25, 2]
+    x2 = u2 * 2.25 - 0.25 # -> [-0.25, 2]
 
     x_train = torch.cat([x1, x2], dim=0)
     Ey = x_train.pow(3) - x_train.pow(2) + 3
@@ -168,13 +168,13 @@ def generate_and_save_poly_1d(save_dir, n_train=50, n_test=200, truesd=0.5, seed
     sig2scale = truevar / scaling2
 
     ## Change here to expand the location of the test set
-    x_test = torch.rand(n_test, 1) * 5 - 2.5
+    x_test = torch.rand(n_test, 1) * 4 - 2
     y_test = x_test.pow(3) - x_test.pow(2) + 3
     y_test = (y_test + truesd * torch.randn_like(x_test) - EEy) / scaling
 
-    # Rescale inputs from [-2.5, 2.5] → [0, 1]
-    x_train_rescaled = (x_train + 2.5) / 5
-    x_test_rescaled = (x_test + 2.5) / 5
+    # Rescale inputs from [-2, 2] → [0, 1]
+    x_train_rescaled = (x_train + 2) / 4
+    x_test_rescaled = (x_test + 2) / 4
 
     torch.save(x_train_rescaled, os.path.join(save_dir, "X_train.pt"))
     # scaled
